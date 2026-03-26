@@ -8,7 +8,12 @@
 
 #.idea
 .idea/
+
+# Python virtual environments
 venv/
+.venv/
+env/
+ENV/
 frontend/gradle
 frontend/gradlew
 frontend/gradlew.bat
