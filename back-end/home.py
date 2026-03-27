@@ -1,1 +1,0 @@
-println("MCQ home page")
