@@ -1,81 +1,77 @@
-
-# Created by https://www.gitignore.io/api/jetbrains
-# Edit at https://www.gitignore.io/?templates=jetbrains
-
-### JetBrains ###
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
-# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
-
-#.idea
+# https://www.gitignore.io/api/jetbrains — JetBrains IDEs
 .idea/
+*.iml
+.run
 
-# Python virtual environments
+### Python (backend) ###
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 venv/
 .venv/
 env/
 ENV/
-frontend/gradle
-frontend/gradlew
-frontend/gradlew.bat
-/gradle
-.gradle
-.run
-gradlew
-gradlew.bat
-*.iml
-.DS_Store
-node_modules/
-
-# End of https://www.gitignore.io/api/jetbrains
-
-
-# Dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Next.js build output
-/.next/
-/out/
-
-# Production build output (if applicable, e.g. for static export)
-/build
-/dist
-
-# Misc
-.DS_Store # macOS specific
-*.pem
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# Local environment files (NEVER commit secrets!)
-.env*.local
-.env
-# Example of ignoring all .env files except a template/example
-# !.env.example
-
-# Vercel deployment cache
-.vercel
-
-# TypeScript cache
-*.tsbuildinfo
-next-env.d.ts # Next.js specific TypeScript declaration file
-
-# Optional caches
-.npm
-.eslintcache
-.stylelintcache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
 .cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+.nox/
 
-# Yarn v2/v3
+### Node / Next.js / React (frontend) ###
+node_modules/
+.pnp
+.pnp.js
+.pnp.*
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-.pnp.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+.eslintcache
+.stylelintcache
+
+# Next.js
+.next/
+out/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing (JS)
+coverage/
+
+### Shared / OS / secrets ###
+.DS_Store
+*.pem
+.env
+.env*.local
+# !.env.example
