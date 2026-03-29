@@ -63,13 +63,19 @@ class TemplateService:
         return template
 
     @staticmethod
-    async def delete_template(db: AsyncSession, template_id: int) -> Dict[str, str]:
+    async def delete_template(
+        db: AsyncSession,
+        template_id: int,
+        *,
+        deleted_by_user_id: int,
+    ) -> Dict[str, str]:
         template = await TemplateRepository.get_by_id(db, template_id)
         if template is None or template.is_deleted:
             raise HTTPException(status_code=404, detail="Template not found")
 
         template.is_deleted = True
         template.deleted_at = datetime.utcnow()
+        template.deleted_by = deleted_by_user_id
         template.deleted_reason = "Deleted via API"
 
         await db.commit()

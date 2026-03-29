@@ -1,11 +1,13 @@
 # app/api/router.py
 
 from fastapi import APIRouter
-from app.api.routes import users, questions, templates, attempts
+
+from app.api.routes import attempt_api, auth_api, question_api, template_api, user_api
 
 api_router = APIRouter()
 
-api_router.include_router(users.router, prefix="/users", tags=["Users"])
-api_router.include_router(questions.router, prefix="/questions", tags=["Questions"])
-api_router.include_router(templates.router, prefix="/templates", tags=["Templates"])
-api_router.include_router(attempts.router, prefix="/attempts", tags=["Attempts"])
+api_router.include_router(auth_api.router, prefix="/auth", tags=["Auth"])
+api_router.include_router(user_api.router, prefix="/users", tags=["Users"])
+api_router.include_router(question_api.router, prefix="/questions", tags=["Questions"])
+api_router.include_router(template_api.router, prefix="/templates", tags=["Templates"])
+api_router.include_router(attempt_api.router, prefix="/attempts", tags=["Attempts"])

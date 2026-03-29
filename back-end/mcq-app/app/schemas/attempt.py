@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 
 
 class StartAttemptRequest(BaseModel):
-    user_id: int
     template_id: int
 
 
@@ -16,6 +15,7 @@ class StartAttemptResponse(BaseModel):
 
 
 class AttemptQuestionOptionOut(BaseModel):
+    label: str
     id: int
     text: str
 
@@ -34,7 +34,6 @@ class AnswerItem(BaseModel):
 
 
 class SubmitAttemptRequest(BaseModel):
-    user_id: int
     answers: List[AnswerItem] = Field(min_length=1)
 
 

@@ -1,6 +1,6 @@
 # app/repositories/user_repo.py
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.models import User
@@ -19,7 +19,10 @@ class UserRepository:
 
     @staticmethod
     async def get_by_email(db: AsyncSession, email: str):
-        result = await db.execute(select(User).where(User.email == email))
+        normalized = email.lower().strip()
+        result = await db.execute(
+            select(User).where(func.lower(User.email) == normalized)
+        )
         return result.scalar_one_or_none()
 
     @staticmethod

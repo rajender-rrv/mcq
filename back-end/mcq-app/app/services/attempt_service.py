@@ -1,10 +1,18 @@
-from typing import Any, Dict, List
+import random
+from typing import Dict, List
 
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.models import TestAttempt, TestAttemptQuestion, TestTemplate, UserAnswer
+from app.models.models import (
+    QuestionOption,
+    TestAttempt,
+    TestAttemptQuestion,
+    TestTemplate,
+    User,
+    UserAnswer,
+)
 from app.repositories.attempt_repo import AttemptRepository
 from app.schemas.attempt import (
     AttemptHistoryItem,
@@ -17,11 +25,26 @@ from app.schemas.attempt import (
 )
 
 
+def _options_with_labels(
+    options: List[QuestionOption], *, seed: int
+) -> List[AttemptQuestionOptionOut]:
+    ordered = list(options)
+    random.Random(seed).shuffle(ordered)
+    out: List[AttemptQuestionOptionOut] = []
+    for i, o in enumerate(ordered):
+        label = chr(ord("A") + i) if i < 26 else str(i + 1)
+        out.append(AttemptQuestionOptionOut(label=label, id=o.id, text=o.option_text))
+    return out
+
+
 class AttemptService:
 
     @staticmethod
     async def start_attempt(
-        db: AsyncSession, body: StartAttemptRequest
+        db: AsyncSession,
+        body: StartAttemptRequest,
+        *,
+        user_id: int,
     ) -> StartAttemptResponse:
         template = await AttemptRepository.get_template(db, body.template_id)
         if template is None or template.is_deleted:
@@ -45,7 +68,7 @@ class AttemptService:
             )
 
         attempt = TestAttempt(
-            user_id=body.user_id,
+            user_id=user_id,
             template_id=body.template_id,
         )
         attempt_questions = [
@@ -64,15 +87,24 @@ class AttemptService:
 
     @staticmethod
     async def get_attempt_questions(
-        db: AsyncSession, attempt_id: int
+        db: AsyncSession,
+        attempt_id: int,
+        *,
+        actor: User,
     ) -> List[AttemptQuestionItem]:
+        attempt = await AttemptRepository.get_attempt(db, attempt_id)
+        if attempt is None:
+            raise HTTPException(status_code=404, detail="Attempt not found")
+        if attempt.user_id != actor.id:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
         rows = await AttemptRepository.list_attempt_questions_with_questions(db, attempt_id)
         if not rows:
             raise HTTPException(status_code=404, detail="Attempt not found or has no questions")
 
         question_ids = [q.id for _, q in rows]
         all_options = await AttemptRepository.list_options_for_questions(db, question_ids)
-        by_qid: Dict[int, List[Any]] = {}
+        by_qid: Dict[int, List[QuestionOption]] = {}
         for opt in all_options:
             by_qid.setdefault(opt.question_id, []).append(opt)
 
@@ -85,21 +117,23 @@ class AttemptService:
                     question_order=taq.question_order,
                     question_id=q.id,
                     question_text=q.question_text,
-                    options=[
-                        AttemptQuestionOptionOut(id=o.id, text=o.option_text) for o in opts
-                    ],
+                    options=_options_with_labels(opts, seed=taq.id),
                 )
             )
         return items
 
     @staticmethod
     async def submit_attempt(
-        db: AsyncSession, attempt_id: int, body: SubmitAttemptRequest
+        db: AsyncSession,
+        attempt_id: int,
+        body: SubmitAttemptRequest,
+        *,
+        actor: User,
     ) -> SubmitAttemptResponse:
         attempt = await AttemptRepository.get_attempt(db, attempt_id)
         if attempt is None:
             raise HTTPException(status_code=404, detail="Attempt not found")
-        if attempt.user_id != body.user_id:
+        if attempt.user_id != actor.id:
             raise HTTPException(status_code=403, detail="Not allowed to submit this attempt")
         if attempt.status != "IN_PROGRESS":
             raise HTTPException(status_code=400, detail="Attempt is not in progress")
@@ -170,9 +204,12 @@ class AttemptService:
         db: AsyncSession,
         *,
         user_id: int,
+        actor: User,
         limit: int = 20,
         offset: int = 0,
     ) -> List[AttemptHistoryItem]:
+        if actor.role != "admin" and actor.id != user_id:
+            raise HTTPException(status_code=403, detail="Forbidden")
         attempts = await AttemptRepository.list_attempts_for_user(
             db, user_id=user_id, limit=limit, offset=offset
         )

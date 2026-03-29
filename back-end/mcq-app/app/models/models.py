@@ -6,7 +6,7 @@ from sqlalchemy import (
     TIMESTAMP, CheckConstraint, Index, UniqueConstraint, text
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base
 
 
@@ -20,9 +20,39 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    role: Mapped[str] = mapped_column(
+        String(20), server_default=text("'user'"), nullable=False
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("true"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=text("now()"), nullable=False
     )
+
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('user', 'admin')",
+            name="ck_users_role",
+        ),
+    )
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, server_default=text("now()"), nullable=False
+    )
+
+    __table_args__ = (Index("idx_refresh_tokens_user", "user_id"),)
 
 
 # =========================

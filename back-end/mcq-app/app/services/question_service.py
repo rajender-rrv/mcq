@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.models import Question, QuestionOption
+from app.models.models import Question, QuestionOption, User
 from app.repositories.question_repo import QuestionRepository
 from app.schemas.question import QuestionCreate, QuestionOptionCreate, QuestionUpdate
 
@@ -13,10 +13,11 @@ def _exactly_one_correct(options: List[Any]) -> bool:
 
 
 class QuestionService:
-    _PLACEHOLDER_USER_ID = 1
 
     @staticmethod
-    async def create_question(db: AsyncSession, body: QuestionCreate) -> Dict[str, int]:
+    async def create_question(
+        db: AsyncSession, body: QuestionCreate, *, created_by: int
+    ) -> Dict[str, int]:
         if not _exactly_one_correct(body.options):
             raise HTTPException(status_code=400, detail="Exactly one correct option required")
 
@@ -26,7 +27,7 @@ class QuestionService:
             class_id=body.class_id,
             subject_id=body.subject_id,
             category_id=body.category_id,
-            created_by=QuestionService._PLACEHOLDER_USER_ID,
+            created_by=created_by,
         )
         opts = [
             QuestionOption(option_text=o.option_text, is_correct=o.is_correct)
@@ -84,11 +85,17 @@ class QuestionService:
 
     @staticmethod
     async def update_question(
-        db: AsyncSession, question_id: int, body: QuestionUpdate
+        db: AsyncSession,
+        question_id: int,
+        body: QuestionUpdate,
+        *,
+        actor: User,
     ) -> Dict[str, str]:
         q = await QuestionRepository.get_by_id(db, question_id)
         if q is None or q.is_deleted:
             raise HTTPException(status_code=404, detail="Question not found")
+        if actor.role != "admin" and q.created_by != actor.id:
+            raise HTTPException(status_code=403, detail="Forbidden")
 
         data = body.model_dump(exclude_unset=True)
         opts_payload = data.pop("options", None)
@@ -111,11 +118,19 @@ class QuestionService:
         return {"message": "updated"}
 
     @staticmethod
-    async def delete_question(db: AsyncSession, question_id: int) -> Dict[str, str]:
+    async def delete_question(
+        db: AsyncSession,
+        question_id: int,
+        *,
+        actor: User,
+    ) -> Dict[str, str]:
         q = await QuestionRepository.get_by_id(db, question_id)
         if q is None or q.is_deleted:
             raise HTTPException(status_code=404, detail="Question not found")
+        if actor.role != "admin" and q.created_by != actor.id:
+            raise HTTPException(status_code=403, detail="Forbidden")
 
         q.is_deleted = True
+        q.deleted_by = actor.id
         await db.commit()
         return {"message": "deleted"}
