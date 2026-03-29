@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy>=2.0
+greenlet
+asyncpg
+alembic
+pydantic
+pydantic-settings
+python-dotenv
+passlib[bcrypt]
