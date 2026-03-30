@@ -28,6 +28,14 @@ class AttemptQuestionItem(BaseModel):
     options: List[AttemptQuestionOptionOut]
 
 
+class AttemptQuestionReviewItem(AttemptQuestionItem):
+    """Same shape as in-progress questions, plus review fields after submission."""
+
+    explanation: Optional[str] = None
+    user_answer: AttemptQuestionOptionOut
+    correct_answer: AttemptQuestionOptionOut
+
+
 class AnswerItem(BaseModel):
     attempt_question_id: int
     selected_option_id: int

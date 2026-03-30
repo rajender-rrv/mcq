@@ -17,6 +17,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app = FastAPI(title="MCQ App")
+app = FastAPI(title="MCQ App",
+    description="These are the APIs for the MCQ App.",
+    version="1.0.0",
+    swagger_ui_parameters={
+        "operationsSorter": "method",
+        "docExpansion": "none",
+        "tryItOutEnabled": True,
+    })
+
 app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(api_router)

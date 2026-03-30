@@ -11,6 +11,7 @@ from app.models.models import User
 from app.schemas.attempt import (
     AttemptHistoryItem,
     AttemptQuestionItem,
+    AttemptQuestionReviewItem,
     StartAttemptRequest,
     StartAttemptResponse,
     SubmitAttemptRequest,
@@ -60,6 +61,20 @@ async def list_user_attempt_history(
         actor=current,
         limit=limit,
         offset=offset,
+    )
+
+
+@router.get(
+    "/{attempt_id}/questions/review",
+    response_model=List[AttemptQuestionReviewItem],
+)
+async def get_attempt_questions_review(
+    attempt_id: int,
+    db: AsyncSession = Depends(get_db),
+    current: User = Depends(get_current_active_user),
+):
+    return await AttemptService.get_attempt_questions_review(
+        db, attempt_id, actor=current
     )
 
 

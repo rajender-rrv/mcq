@@ -93,6 +93,23 @@ class AttemptRepository:
         return list(result.all())
 
     @staticmethod
+    async def list_attempt_questions_with_questions_and_answers(
+        db: AsyncSession, attempt_id: int
+    ) -> List[Tuple[TestAttemptQuestion, Question, UserAnswer]]:
+        stmt = (
+            select(TestAttemptQuestion, Question, UserAnswer)
+            .join(Question, TestAttemptQuestion.question_id == Question.id)
+            .join(
+                UserAnswer,
+                UserAnswer.attempt_question_id == TestAttemptQuestion.id,
+            )
+            .where(TestAttemptQuestion.attempt_id == attempt_id)
+            .order_by(TestAttemptQuestion.question_order)
+        )
+        result = await db.execute(stmt)
+        return list(result.all())
+
+    @staticmethod
     async def list_options_for_questions(
         db: AsyncSession, question_ids: Sequence[int]
     ) -> List[QuestionOption]:

@@ -2,10 +2,18 @@
 
 from fastapi import APIRouter
 
-from app.api.routes import attempt_api, auth_api, question_api, template_api, user_api
+from app.api.routes import (
+    attempt_api,
+    auth_api,
+    health_api,
+    question_api,
+    template_api,
+    user_api,
+)
 
 api_router = APIRouter()
 
+api_router.include_router(health_api.router, prefix="/health", tags=["Health"])
 api_router.include_router(auth_api.router, prefix="/auth", tags=["Auth"])
 api_router.include_router(user_api.router, prefix="/users", tags=["Users"])
 api_router.include_router(question_api.router, prefix="/questions", tags=["Questions"])

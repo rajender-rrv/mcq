@@ -18,6 +18,7 @@ from app.schemas.attempt import (
     AttemptHistoryItem,
     AttemptQuestionItem,
     AttemptQuestionOptionOut,
+    AttemptQuestionReviewItem,
     StartAttemptRequest,
     StartAttemptResponse,
     SubmitAttemptRequest,
@@ -35,6 +36,15 @@ def _options_with_labels(
         label = chr(ord("A") + i) if i < 26 else str(i + 1)
         out.append(AttemptQuestionOptionOut(label=label, id=o.id, text=o.option_text))
     return out
+
+
+def _labeled_option_by_id(
+    labeled: List[AttemptQuestionOptionOut], option_id: int
+) -> AttemptQuestionOptionOut:
+    for o in labeled:
+        if o.id == option_id:
+            return o
+    raise HTTPException(status_code=500, detail="Option not found in question options")
 
 
 class AttemptService:
@@ -118,6 +128,57 @@ class AttemptService:
                     question_id=q.id,
                     question_text=q.question_text,
                     options=_options_with_labels(opts, seed=taq.id),
+                )
+            )
+        return items
+
+    @staticmethod
+    async def get_attempt_questions_review(
+        db: AsyncSession,
+        attempt_id: int,
+        *,
+        actor: User,
+    ) -> List[AttemptQuestionReviewItem]:
+        attempt = await AttemptRepository.get_attempt(db, attempt_id)
+        if attempt is None:
+            raise HTTPException(status_code=404, detail="Attempt not found")
+        if actor.role != "admin" and attempt.user_id != actor.id:
+            raise HTTPException(status_code=403, detail="Forbidden")
+        if attempt.status != "COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail="Review is only available for completed attempts",
+            )
+
+        rows = await AttemptRepository.list_attempt_questions_with_questions_and_answers(
+            db, attempt_id
+        )
+        if not rows:
+            raise HTTPException(status_code=404, detail="Attempt not found or has no answers")
+
+        question_ids = [q.id for _, q, _ in rows]
+        all_options = await AttemptRepository.list_options_for_questions(db, question_ids)
+        by_qid: Dict[int, List[QuestionOption]] = {}
+        for opt in all_options:
+            by_qid.setdefault(opt.question_id, []).append(opt)
+
+        items: List[AttemptQuestionReviewItem] = []
+        for taq, q, ua in rows:
+            opts = by_qid.get(q.id, [])
+            labeled = _options_with_labels(opts, seed=taq.id)
+            correct_opt = next((o for o in opts if o.is_correct), None)
+            if correct_opt is None:
+                raise HTTPException(status_code=500, detail="Question has no correct option")
+            items.append(
+                AttemptQuestionReviewItem(
+                    attempt_question_id=taq.id,
+                    question_order=taq.question_order,
+                    question_id=q.id,
+                    question_text=q.question_text,
+                    options=labeled,
+                    explanation=q.explanation,
+                    user_answer=_labeled_option_by_id(labeled, ua.selected_option_id),
+                    correct_answer=_labeled_option_by_id(labeled, correct_opt.id),
                 )
             )
         return items
