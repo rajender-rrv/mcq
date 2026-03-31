@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Question = {
-  question_text: string;
+  questionname: string;
   options: string[];
   correctAnswer: number | null;
 };
@@ -27,21 +27,13 @@ const DEFAULT_OPTIONS = ["", "", "", ""];
 export default function MultiQuestionPage() {
   const router = useRouter();
 
-  // ================= STATE =================
+  // ✅ FIXED FORM STATE
   const [form, setForm] = useState({
     class_id: "",
     subject_id: "",
     category_id: ""
   });
 
-  const [questions, setQuestions] = useState<Question[]>([
-    { question_text: "", options: [...DEFAULT_OPTIONS], correctAnswer: null }
-  ]);
-
-  const [errors, setErrors] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-
-  // ================= FORM CHANGE =================
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({
       ...prev,
@@ -49,54 +41,14 @@ export default function MultiQuestionPage() {
     }));
   };
 
-  // ================= VALIDATION =================
-  const validate = () => {
-    let newErrors: any = {};
+  const [questions, setQuestions] = useState<Question[]>([
+    { questionname: "", options: [...DEFAULT_OPTIONS], correctAnswer: null }
+  ]);
 
-    if (!form.class_id) newErrors.class_id = "Class is required";
-    if (!form.subject_id) newErrors.subject_id = "Subject is required";
-    if (!form.category_id) newErrors.category_id = "Category is required";
-
-    newErrors.questions = [];
-
-    questions.forEach((q, qIndex) => {
-      let qErrors: any = {};
-
-      if (!q.question_text.trim()) {
-        qErrors.question_text = "Question is required";
-      }
-
-      qErrors.options = q.options.map((opt: string) =>
-        !opt.trim() ? "Option is required" : ""
-      );
-
-      if (q.correctAnswer === null) {
-        qErrors.correctAnswer = "Select correct answer";
-      }
-
-      newErrors.questions[qIndex] = qErrors;
-    });
-
-    setErrors(newErrors);
-
-    return (
-      !newErrors.class_id &&
-      !newErrors.subject_id &&
-      !newErrors.category_id &&
-      newErrors.questions.every(
-        (q: any) =>
-          !q.question_text &&
-          !q.correctAnswer &&
-          q.options.every((o: string) => !o)
-      )
-    );
-  };
-
-  // ================= QUESTION HANDLERS =================
   const handleQuestionChange = (qIndex: number, value: string) => {
     setQuestions((prev) =>
       prev.map((q, i) =>
-        i === qIndex ? { ...q, question_text: value } : q
+        i === qIndex ? { ...q, questionname: value } : q
       )
     );
   };
@@ -134,7 +86,7 @@ export default function MultiQuestionPage() {
     setQuestions((prev) => [
       ...prev,
       {
-        question_text: "",
+        questionname: "",
         options: [...DEFAULT_OPTIONS],
         correctAnswer: null
       }
@@ -177,49 +129,36 @@ export default function MultiQuestionPage() {
     );
   };
 
-  // ================= SUBMIT (API CALL) =================
-  const handleSubmit = async () => {
-    if (!validate()) return;
+  const handleSubmit = () => {
+    if (!form.class_id || !form.subject_id || !form.category_id) {
+      alert("Please select class, subject and category");
+      return;
+    }
+
+    const isValid = questions.every(
+      (q) =>
+        q.questionname.trim() &&
+        q.options.length >= 2 &&
+        q.options.every((o) => o.trim()) &&
+        q.correctAnswer !== null
+    );
+
+    if (!isValid) {
+      alert("Fill all fields and select correct answers");
+      return;
+    }
 
     const finalPayload = {
       ...form,
       questions
     };
 
-    try {
-      setLoading(true);
+    console.log("Final Data:", finalPayload);
 
-      const res = await fetch("/matdash-nextjs/api/questions", {
-        method: "POST",
-        headers: {
-         // "Content-Type": "application/json"
-           "Content-Type": "text/plain"
-		  // Authorization: `Bearer ${token}` // optional
-        },
-        body: JSON.stringify(finalPayload)
-      });
-	 console.log(res); 
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Something went wrong");
-      }
-
-      alert("Questions Saved Successfully ✅");
-
-      router.push("/QuestionsList");
-
-	  
-    } catch (error: any) {
-      console.error(error);
-      alert(error.message || "Failed to save ❌");
-    } finally {
-      setLoading(false);
-    }
+    alert("Questions Saved ✅");
+    router.push("/QuestionsList");
   };
 
-  // ================= UI =================
   return (
     <Box p={3}>
       <Paper sx={{ p: 3 }}>
@@ -232,11 +171,8 @@ export default function MultiQuestionPage() {
           select
           label="Class"
           fullWidth
-          required
           margin="normal"
           value={form.class_id}
-          error={!!errors.class_id}
-          helperText={errors.class_id}
           onChange={(e) => handleChange("class_id", e.target.value)}
         >
           <MenuItem value="1">Grade 6</MenuItem>
@@ -248,11 +184,8 @@ export default function MultiQuestionPage() {
           select
           label="Subject"
           fullWidth
-          required
           margin="normal"
           value={form.subject_id}
-          error={!!errors.subject_id}
-          helperText={errors.subject_id}
           onChange={(e) => handleChange("subject_id", e.target.value)}
         >
           <MenuItem value="1">Maths</MenuItem>
@@ -264,18 +197,15 @@ export default function MultiQuestionPage() {
           select
           label="Category"
           fullWidth
-          required
           margin="normal"
           value={form.category_id}
-          error={!!errors.category_id}
-          helperText={errors.category_id}
           onChange={(e) => handleChange("category_id", e.target.value)}
         >
           <MenuItem value="1">Easy</MenuItem>
           <MenuItem value="2">Medium</MenuItem>
         </TextField>
 
-        {/* Questions */}
+        {/* Questions UI stays same */}
         {questions.map((q, qIndex) => (
           <Box key={qIndex} mb={4} p={2} border="1px solid #ddd">
             <Box display="flex" justifyContent="space-between">
@@ -288,41 +218,28 @@ export default function MultiQuestionPage() {
               </IconButton>
             </Box>
 
-            {/* Question */}
             <TextField
               fullWidth
               multiline
               rows={2}
-              required
               margin="normal"
               label="Question"
-              value={q.question_text}
-              error={!!errors.questions?.[qIndex]?.question_text}
-              helperText={errors.questions?.[qIndex]?.question_text}
+              value={q.questionname}
               onChange={(e) =>
                 handleQuestionChange(qIndex, e.target.value)
               }
             />
 
-            {/* Options */}
             {q.options.map((opt, oIndex) => (
               <Box key={oIndex} display="flex" gap={1} mt={1}>
                 <TextField
                   fullWidth
-                  required
                   label={`Option ${oIndex + 1}`}
                   value={opt}
-                  error={
-                    !!errors.questions?.[qIndex]?.options?.[oIndex]
-                  }
-                  helperText={
-                    errors.questions?.[qIndex]?.options?.[oIndex]
-                  }
                   onChange={(e) =>
                     handleOptionChange(qIndex, oIndex, e.target.value)
                   }
                 />
-
                 <IconButton
                   disabled={q.options.length <= 2}
                   onClick={() => deleteOption(qIndex, oIndex)}
@@ -340,18 +257,12 @@ export default function MultiQuestionPage() {
               Add Option
             </Button>
 
-            {/* Correct Answer */}
             <TextField
               select
               fullWidth
-              required
               margin="normal"
               label="Correct Answer"
               value={q.correctAnswer ?? ""}
-              error={!!errors.questions?.[qIndex]?.correctAnswer}
-              helperText={
-                errors.questions?.[qIndex]?.correctAnswer
-              }
               onChange={(e) =>
                 handleCorrectAnswer(qIndex, Number(e.target.value))
               }
@@ -370,12 +281,8 @@ export default function MultiQuestionPage() {
         </Button>
 
         <Box mt={2}>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save All"}
+          <Button variant="contained" onClick={handleSubmit}>
+            Save All
           </Button>
         </Box>
       </Paper>

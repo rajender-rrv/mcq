@@ -60,7 +60,7 @@ const SidebarContent: MenuItem[] = [
         name: "Add Questions",
         icon: "solar:notes-minimalistic-outline",
         id: uniqueId(),
-        url: "/add-questions",
+        url: "/QuestionsList/new",
         isPro: false
       },
       {
