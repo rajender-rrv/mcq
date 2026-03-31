@@ -3,6 +3,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # Note: for dedicated schema usage, set search_path via DATABASE_URL, e.g.
+    # postgresql+asyncpg://.../mcq_db?options=-csearch_path%3Dmcq_default,public
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mcq_db"
 
     # Use a long random value in production (e.g. openssl rand -hex 32).
