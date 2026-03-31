@@ -69,6 +69,7 @@
     "@netlify/plugin-nextjs": "^5.15.9",
     "@types/aos": "3.0.7",
     "@types/chance": "1.1.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.13",
     "@types/node": "20",
     "@types/react": "19.2.2",

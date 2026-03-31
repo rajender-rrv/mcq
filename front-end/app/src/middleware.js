@@ -5,7 +5,7 @@ export function middleware(req) {
 
   const pathname = req.nextUrl.pathname;
 console.log("1.this one::::"+pathname);
-  if (!token &&  pathname!='/auth/login' &&  pathname!='/api/login' &&  pathname!='/auth/register' && pathname!='/matdash-nextjs/auth/login') {
+  if (!token &&  pathname!='/auth/login' &&  pathname!='/api/login' &&  pathname!='/api/register' && pathname!='/auth/register' && pathname!='/matdash-nextjs/auth/login') {
   console.log("2.this one::::"+pathname);
 
     return NextResponse.redirect(new URL("/matdash-nextjs/auth/login", req.url));

@@ -140,16 +140,6 @@ export default function MCQClient({ user }: any) {
   // ================= QUESTION PAGE =================
   return (
     <div style={{ padding: "20px" }}>
-      {/* USER INFO */}
-      {user ? (
-        <>
-          <p><b>Email:</b> {user.email}</p>
-          <p><b>Role:</b> {user.role}</p>
-        </>
-      ) : (
-        <p>No session found</p>
-      )}
-
       <h3>
         MCQ Questions {startIndex} -{" "}
         {Math.min(startIndex + itemsPerPage - 1, data.length)}

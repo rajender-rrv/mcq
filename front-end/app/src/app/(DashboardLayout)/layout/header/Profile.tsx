@@ -15,14 +15,16 @@ import { Icon } from "@iconify/react";
 export default function Profile() {
   const handleLogout = async () => {
     try {
-      await fetch("/matdash-nextjs/api/logout", {
+      const res =  await fetch("/matdash-nextjs/api/logout", {
         method: "POST",
+		"Content-Type": "text/plain",
       });
-
-      // Redirect after logout
-      window.location.href = "/matdash-nextjs/auth/login";
-	 //window.location.href = "/auth/login";
-    } catch (error) {
+		
+      const data = await res.json();
+	  if(data.status == 204){
+		window.location.href = "/matdash-nextjs/auth/login";
+	  }
+	} catch (error) {
       console.error("Logout failed:", error);
     }
   };

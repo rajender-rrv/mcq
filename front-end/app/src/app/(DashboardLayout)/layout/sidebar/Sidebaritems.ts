@@ -57,10 +57,31 @@ const SidebarContent: MenuItem[] = [
         isPro: false
       },
       {
+        name: "Add Questions",
+        icon: "solar:notes-minimalistic-outline",
+        id: uniqueId(),
+        url: "/add-questions",
+        isPro: false
+      },
+      {
         name: "Bulk Upload",
         icon: "solar:notes-minimalistic-outline",
         id: uniqueId(),
         url: "/bulk-upload",
+        isPro: false
+      },
+      {
+        name: "Users List",
+        icon: "solar:notes-minimalistic-outline",
+        id: uniqueId(),
+        url: "/users",
+        isPro: false
+      },
+      {
+        name: "Users to Profile Mapping",
+        icon: "solar:notes-minimalistic-outline",
+        id: uniqueId(),
+        url: "/user-profile/mapping",
         isPro: false
       },
       {

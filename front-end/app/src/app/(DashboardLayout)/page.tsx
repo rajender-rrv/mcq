@@ -11,24 +11,15 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import MCQClient from "./MCQClient";
 
-
-
 const page = async() => {
-	  const cookieStore = await cookies();
-
-  //console.log(cookieStore.getAll());
-  
+	const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
-
-  console.log("token::"+token);
-  
+    console.log("ALL COOKIES:", cookieStore.getAll()); // 👈 add this
   
   if (!token) {
     redirect("/auth/login");
   }
-  
-  
   
   return (
     <>
