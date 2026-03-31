@@ -170,6 +170,30 @@ class Question(Base):
 
 
 # =========================
+# TAGS
+# =========================
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+
+
+class QuestionTag(Base):
+    __tablename__ = "question_tags"
+
+    question_id: Mapped[int] = mapped_column(
+        ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag_id: Mapped[int] = mapped_column(
+        ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True
+    )
+
+    __table_args__ = (Index("idx_question_tags_tag", "tag_id"),)
+
+
+# =========================
 # QUESTION OPTIONS
 # =========================
 class QuestionOption(Base):
