@@ -20,7 +20,6 @@ export const Register = () => {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('') // ✅ NEW
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -33,15 +32,16 @@ export const Register = () => {
     e.preventDefault()
     setLoading(true)
     setError('')
-    setSuccess('')
 
     try {
  const res = await fetch("/matdash-nextjs/api/register", {
-        method: 'POST',
+		method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          //'Content-Type': 'application/json'
+		  "Content-Type": "text/plain",
+
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(form)
       })
 
       const data = await res.json()
@@ -49,15 +49,9 @@ export const Register = () => {
       if (!res.ok) {
         throw new Error(data.message || 'Registration failed')
       }
-
-      // ✅ SUCCESS MESSAGE
-      setSuccess('Registration successful! & Redirecting to Login Page in 10 secs...')
-
-      // ✅ REDIRECT AFTER SHORT DELAY
-      setTimeout(() => {
-        router.push('/auth/login')
-      }, 10000)
-
+console.log("its rendering...!!!");
+      // Redirect after success
+      router.push('/auth/login')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -78,42 +72,67 @@ export const Register = () => {
           </p>
 
           <form onSubmit={handleSubmit}>
-            {/* Username */}
+            {/* username */}
             <div className='mb-4'>
-              <Label htmlFor='username'>User Name</Label>
-              <Input id='username' value={form.username} onChange={handleChange} required />
+              <Label htmlFor='username' className='font-medium'>User Name</Label>
+              <Input
+                id='username'
+                type='text'
+                placeholder='Enter your username'
+                value={form.username}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             {/* Email */}
             <div className='mb-4'>
-              <Label htmlFor='email'>Email</Label>
-              <Input id='email' type='email' value={form.email} onChange={handleChange} required />
+              <Label htmlFor='email' className='font-medium'>Email</Label>
+              <Input
+                id='email'
+                type='email'
+                placeholder='Enter your email'
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             {/* Password */}
             <div className='mb-4'>
-              <Label htmlFor='password'>Password</Label>
-              <Input id='password' type='password' value={form.password} onChange={handleChange} required />
+              <Label htmlFor='password' className='font-medium'>Password</Label>
+              <Input
+                id='password'
+                type='password'
+                placeholder='Enter your password'
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            {/* ERROR */}
+            {/* Error */}
             {error && (
               <p className='text-red-500 text-sm mb-3'>{error}</p>
             )}
 
-            {/* SUCCESS */}
-            {success && (
-              <p className='text-green-600 text-sm mb-3'>{success}</p>
-            )}
-
+            {/* Submit */}
             <Button className='w-full' disabled={loading}>
               {loading ? 'Signing Up...' : 'Sign Up'}
             </Button>
           </form>
 
-          <div className='flex justify-center mt-6 gap-2'>
-            <p>Already have an account?</p>
-            <Link href='/auth/login'>Sign In</Link>
+          {/* Footer */}
+          <div className='flex items-center gap-2 justify-center mt-6 flex-wrap'>
+            <p className='text-base font-medium text-link dark:text-darklink'>
+              Already have an account?
+            </p>
+            <Link
+              href='/auth/login'
+              className='text-sm font-medium text-primary hover:text-primaryemphasis'
+            >
+              Sign In
+            </Link>
           </div>
         </CardBox>
       </div>
