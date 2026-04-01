@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = "my-secret-key"; // ⚠️ MUST match login
+const SECRET = process.env.SECRET_KEY;
 
 export function getSession(token: string) {
   try {

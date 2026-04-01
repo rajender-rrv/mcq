@@ -164,7 +164,8 @@ export default function InvoicePage() {
   };
 
   const handleDelete = async (id: number) => {
-    await fetch(`http://127.0.0.1:8000/users/${id}/`, {
+    const backendUrl = process.env.API_BASE_URL;
+    await fetch(`${backendUrl}/users/${id}/`, {
       method: "DELETE",
     });
 

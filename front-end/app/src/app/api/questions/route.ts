@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const SECRET = "my-secret-key";
+const SECRET = process.env.SECRET_KEY;
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
@@ -44,9 +44,9 @@ export async function POST(req: Request) {
 
     try {
       console.log("API HIT before ✅");
-
+      const backendUrl = process.env.API_BASE_URL;
       const backendRes = await fetch(
-        "http://127.0.0.1:8000/questions/",
+        `${backendUrl}/questions/`,
         {
           method: "POST",
           headers: {
@@ -82,8 +82,9 @@ export async function GET() {
     const access_token = cookieStore.get("access_token")?.value;
 
     console.log("access_token:", access_token);
+    const backendUrl = process.env.API_BASE_URL;
 
-    const backendRes = await fetch("http://127.0.0.1:8000/users/", {
+    const backendRes = await fetch(`${backendUrl}/users/`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -112,8 +113,8 @@ export async function GET() {
     const access_token = cookieStore.get("access_token")?.value;
 
     console.log("access_token:", access_token);
-
-    const backendRes = await fetch("http://127.0.0.1:8000/questions/", {
+    const backendUrl = process.env.API_BASE_URL;
+    const backendRes = await fetch(`${backendUrl}/questions/`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${access_token}`,

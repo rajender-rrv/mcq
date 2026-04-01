@@ -8,7 +8,8 @@ export async function GET() {
 
     console.log("access_token:", access_token);
 
-    const backendRes = await fetch("http://127.0.0.1:8000/users/", {
+    const backendUrl = process.env.API_BASE_URL;
+    const backendRes = await fetch(`${backendUrl}/users/`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${access_token}`,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const SECRET = "my-secret-key";
+const SECRET = process.env.SECRET_KEY;
 
 export async function POST(req: Request) {
   try {
@@ -61,7 +61,8 @@ export async function POST(req: Request) {
     console.log("Payload:", api_json_data);
 
     // ✅ Backend API Call
-    const backendRes = await fetch("http://127.0.0.1:8000/templates/", {
+     const backendUrl = process.env.API_BASE_URL;
+    const backendRes = await fetch(`${backendUrl}/templates/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

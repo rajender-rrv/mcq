@@ -12,7 +12,8 @@ export async function POST() {
     console.log("refresh_token:", refresh_token);
 
     // ✅ Call backend logout API
-    const backendRes = await fetch("http://127.0.0.1:8000/auth/logout", {
+    const backendUrl = process.env.API_BASE_URL;
+    const backendRes = await fetch(`${backendUrl}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json", // ✅ FIXED

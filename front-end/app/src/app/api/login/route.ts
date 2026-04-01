@@ -3,9 +3,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-//const SECRET = process.env.JWT_SECRET!;
-
-const SECRET = "my-secret-key";
+const SECRET = process.env.SECRET_KEY;
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +14,8 @@ export async function POST(req: Request) {
 	  console.log(email +"==="+password);
 
     // ✅ Call your backend API
-    const backendRes = await fetch("http://127.0.0.1:8000/auth/login", {
+    const backendUrl = process.env.API_BASE_URL;
+    const backendRes = await fetch(`${backendUrl}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

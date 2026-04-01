@@ -3,7 +3,7 @@ console.log("my test....!!!!");
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-const SECRET = "my-secret-key";
+const SECRET = process.env.SECRET_KEY;
 
 export async function POST(req: Request) {
   const { email, password } = await req.json();
