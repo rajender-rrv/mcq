@@ -6,132 +6,280 @@ import {
   Button,
   Typography,
   Paper,
-  MenuItem
+  MenuItem,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormLabel
 } from "@mui/material";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function NewInvoicePage() {
+export default function SimpleFormPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    from: "",
-    to: "",
-    cost: "",
-    status: "Pending",
-    created: "",
-    due: ""
+    name: "",
+    duration: "",
+    total_questions: "",
+    class_id: "",
+    subject_id: "",
+    category_id: "",
+    shuffle_questions: "false",
+    shuffle_options: "false",
+    negative_marking: "false"
   });
 
-  // ✅ HANDLE CHANGE
-  const handleChange = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
+  const [errors, setErrors] = useState<any>({});
+  const [loading, setLoading] = useState(false);
+
+  // ================= HANDLE CHANGE =================
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  // ✅ SUBMIT
-  const handleSubmit = () => {
-    if (!form.from || !form.to || !form.cost) {
-      alert("Please fill all required fields");
-      return;
+  // ================= VALIDATION =================
+  const validate = () => {
+    let newErrors: any = {};
+    let isValid = true;
+
+    if (!form.name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
     }
 
-    const newInvoice = {
-      id: Math.floor(Math.random() * 1000), // temp id
-      ...form,
-      cost: Number(form.cost)
-    };
+    // ✅ Duration validation
+    if (!form.duration) {
+      newErrors.duration = "Duration is required";
+      isValid = false;
+    } else if (Number(form.duration) <= 0) {
+      newErrors.duration = "Must be greater than 0 (no negative/zero)";
+      isValid = false;
+    }
 
-    console.log("New Invoice:", newInvoice);
+    // ✅ Total Questions validation
+    if (!form.total_questions) {
+      newErrors.total_questions = "Total questions required";
+      isValid = false;
+    } else if (Number(form.total_questions) <= 0) {
+      newErrors.total_questions = "Must be greater than 0 (no negative/zero)";
+      isValid = false;
+    }
 
-    alert("Invoice Created ✅");
+    if (!form.class_id) {
+      newErrors.class_id = "Class is required";
+      isValid = false;
+    }
 
-    router.push("/QuestionsList");
+    if (!form.subject_id) {
+      newErrors.subject_id = "Subject is required";
+      isValid = false;
+    }
+
+    if (!form.category_id) {
+      newErrors.category_id = "Category is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
+  // ================= SUBMIT =================
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    const payload = {
+      name: form.name,
+      duration: Number(form.duration),
+      total_questions: Number(form.total_questions),
+      class_id: Number(form.class_id),
+      subject_id: Number(form.subject_id),
+      category_id: Number(form.category_id),
+      shuffle_questions: form.shuffle_questions === "true",
+      shuffle_options: form.shuffle_options === "true",
+      negative_marking: form.negative_marking === "true"
+    };
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("/matdash-nextjs/api/template", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message);
+
+      alert("Saved Successfully ✅");
+      router.push("/template");
+    } catch (error: any) {
+      alert(error.message || "Error ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ================= UI =================
   return (
     <Box p={3}>
-      <Paper sx={{ p: 3, maxWidth: 600 }}>
+      <Paper sx={{ p: 3 }}>
         <Typography variant="h6" mb={2}>
           Add Template
         </Typography>
 
-        {/* From */}
+        {/* Name */}
         <TextField
-          label="Bill From"
+          label="Name"
           fullWidth
+          required
           margin="normal"
-          value={form.from}
-          onChange={(e) => handleChange("from", e.target.value)}
+          value={form.name}
+          error={!!errors.name}
+          helperText={errors.name}
+          onChange={(e) => handleChange("name", e.target.value)}
         />
 
-        {/* To */}
+        {/* Duration */}
         <TextField
-          label="Bill To"
-          fullWidth
-          margin="normal"
-          value={form.to}
-          onChange={(e) => handleChange("to", e.target.value)}
-        />
-
-        {/* Cost */}
-        <TextField
-          label="Total Cost"
+          label="Duration (minutes)"
           type="number"
           fullWidth
           margin="normal"
-          value={form.cost}
-          onChange={(e) => handleChange("cost", e.target.value)}
+          inputProps={{ min: 1 }}
+          value={form.duration}
+          error={!!errors.duration}
+          helperText={errors.duration}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (Number(value) < 0) return; // ❌ block negative
+            handleChange("duration", value);
+          }}
         />
 
-        {/* Status */}
+        {/* Total Questions */}
+        <TextField
+          label="Total Questions"
+          type="number"
+          fullWidth
+          margin="normal"
+          inputProps={{ min: 1 }}
+          value={form.total_questions}
+          error={!!errors.total_questions}
+          helperText={errors.total_questions}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (Number(value) < 0) return; // ❌ block negative
+            handleChange("total_questions", value);
+          }}
+        />
+
+        {/* Class */}
         <TextField
           select
-          label="Status"
+          label="Class"
           fullWidth
           margin="normal"
-          value={form.status}
-          onChange={(e) => handleChange("status", e.target.value)}
+          value={form.class_id}
+          error={!!errors.class_id}
+          helperText={errors.class_id}
+          onChange={(e) => handleChange("class_id", e.target.value)}
         >
-          <MenuItem value="Paid">Paid</MenuItem>
-          <MenuItem value="Pending">Pending</MenuItem>
-          <MenuItem value="Overdue">Overdue</MenuItem>
-          <MenuItem value="Draft">Draft</MenuItem>
+          <MenuItem value="1">Grade 6</MenuItem>
+          <MenuItem value="2">Grade 7</MenuItem>
         </TextField>
 
-        {/* Created Date */}
+        {/* Subject */}
         <TextField
-          type="date"
-          label="Created Date"
+          select
+          label="Subject"
           fullWidth
           margin="normal"
-          InputLabelProps={{ shrink: true }}
-          value={form.created}
-          onChange={(e) => handleChange("created", e.target.value)}
-        />
+          value={form.subject_id}
+          error={!!errors.subject_id}
+          helperText={errors.subject_id}
+          onChange={(e) => handleChange("subject_id", e.target.value)}
+        >
+          <MenuItem value="1">Maths</MenuItem>
+          <MenuItem value="2">Science</MenuItem>
+        </TextField>
 
-        {/* Due Date */}
+        {/* Category */}
         <TextField
-          type="date"
-          label="Due Date"
+          select
+          label="Category"
           fullWidth
           margin="normal"
-          InputLabelProps={{ shrink: true }}
-          value={form.due}
-          onChange={(e) => handleChange("due", e.target.value)}
-        />
+          value={form.category_id}
+          error={!!errors.category_id}
+          helperText={errors.category_id}
+          onChange={(e) => handleChange("category_id", e.target.value)}
+        >
+          <MenuItem value="1">Easy</MenuItem>
+          <MenuItem value="2">Medium</MenuItem>
+        </TextField>
 
-        {/* Actions */}
-        <Box mt={2} display="flex" gap={2}>
-          <Button variant="contained" onClick={handleSubmit}>
-            Save
-          </Button>
-
-          <Button
-            variant="outlined"
-            onClick={() => router.push("/QuestionsList")}
+        {/* Shuffle Questions */}
+        <Box mt={2}>
+          <FormLabel>Shuffle Questions</FormLabel>
+          <RadioGroup
+            row
+            value={form.shuffle_questions}
+            onChange={(e) =>
+              handleChange("shuffle_questions", e.target.value)
+            }
           >
-            Cancel
+            <FormControlLabel value="true" control={<Radio />} label="Yes" />
+            <FormControlLabel value="false" control={<Radio />} label="No" />
+          </RadioGroup>
+        </Box>
+
+        {/* Shuffle Options */}
+        <Box mt={2}>
+          <FormLabel>Shuffle Options</FormLabel>
+          <RadioGroup
+            row
+            value={form.shuffle_options}
+            onChange={(e) =>
+              handleChange("shuffle_options", e.target.value)
+            }
+          >
+            <FormControlLabel value="true" control={<Radio />} label="Yes" />
+            <FormControlLabel value="false" control={<Radio />} label="No" />
+          </RadioGroup>
+        </Box>
+
+        {/* Negative Marking */}
+        <Box mt={2}>
+          <FormLabel>Negative Marking</FormLabel>
+          <RadioGroup
+            row
+            value={form.negative_marking}
+            onChange={(e) =>
+              handleChange("negative_marking", e.target.value)
+            }
+          >
+            <FormControlLabel value="true" control={<Radio />} label="Yes" />
+            <FormControlLabel value="false" control={<Radio />} label="No" />
+          </RadioGroup>
+        </Box>
+
+        <Box mt={3}>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save"}
           </Button>
         </Box>
       </Paper>

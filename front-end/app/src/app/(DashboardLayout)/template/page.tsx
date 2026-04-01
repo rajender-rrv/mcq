@@ -79,8 +79,7 @@ export default function InvoicePage() {
       try {
         setLoading(true);
 
-        const res = await fetch("/matdash-nextjs/api/users/allusers");
-
+        const res = await fetch("/matdash-nextjs/api/template");
         if (!res.ok) {
           throw new Error("Failed to fetch");
         }
