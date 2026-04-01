@@ -16,6 +16,7 @@ import {
   TableSortLabel,
   Button,
   Chip,
+  Typography,
 } from "@mui/material";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -199,6 +200,9 @@ export default function InvoicePage() {
 
   return (
     <Box p={3}>
+	<Typography variant="h6" mb={2}>
+          Users List
+        </Typography>
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         {/* Tabs */}
         <Box className="grid grid-cols-12 gap-6 mb-4">

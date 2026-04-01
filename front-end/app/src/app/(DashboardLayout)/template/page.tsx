@@ -29,7 +29,7 @@ type Status = "Paid" | "Overdue" | "Pending" | "Draft";
 
 interface Invoice {
   id: number;
-  question_text: string;
+  myname: string;
   to: string;
   cost: number;
   status: Status;
@@ -79,7 +79,7 @@ export default function InvoicePage() {
       try {
         setLoading(true);
 
-        const res = await fetch("/matdash-nextjs/api/questions");
+        const res = await fetch("/matdash-nextjs/api/users/allusers");
 
         if (!res.ok) {
           throw new Error("Failed to fetch");
@@ -92,7 +92,7 @@ export default function InvoicePage() {
 
         const formatted: Invoice[] = users.map((user: any, index: number) => ({
           id: user.id || index + 1,
-          question_text: user.name || user.question_text || "N/A",
+          myname: user.name || user.username || "N/A",
           to: user.email || "N/A",
           cost: Number(user.cost) || 0,
           status: ["Paid", "Overdue", "Pending", "Draft"].includes(user.status)
@@ -181,7 +181,7 @@ export default function InvoicePage() {
       complete: (results: any) => {
         const parsed = results.data.map((row: any, i: number) => ({
           id: Number(row.id) || Date.now() + i,
-          question_text: row.question_text,
+          myname: row.myname,
           to: row.to,
           cost: Number(row.cost) || 0,
           status: row.status || "Draft",
@@ -200,12 +200,10 @@ export default function InvoicePage() {
 
   return (
     <Box p={3}>
-	  <Typography variant="h6" mb={2}>
-			Questions List
+	<Typography variant="h6" mb={2}>
+          Template List
         </Typography>
-		
       <Paper sx={{ p: 3, borderRadius: 3 }}>
-	  
         {/* Tabs */}
         <Box className="grid grid-cols-12 gap-6 mb-4">
           {["All", "Paid", "Overdue", "Pending", "Draft"].map((t) => (
@@ -250,7 +248,7 @@ export default function InvoicePage() {
             <TableHead>
               <TableRow>
                 <TableCell />
-                {["id","question_text","to","cost","status","created","due"].map((col) => (
+                {["id","myname","to","cost","status","created","due"].map((col) => (
                   <TableCell key={col}>
                     <TableSortLabel
                       active={orderBy === col}
@@ -276,7 +274,7 @@ export default function InvoicePage() {
                   </TableCell>
 
                   <TableCell>{row.id}</TableCell>
-                  <TableCell>{row.question_text}</TableCell>
+                  <TableCell>{row.myname}</TableCell>
                   <TableCell>{row.to}</TableCell>
                   <TableCell>{row.cost}</TableCell>
 

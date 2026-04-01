@@ -22,7 +22,6 @@ import {
   Tooltip,
   TextField,
   Chip,
-  Typography,
 } from "@mui/material";
 
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -36,19 +35,20 @@ type Status = "Paid" | "Overdue" | "Pending" | "Draft";
 
 interface Invoice {
   id: number;
-  bulkname: string;
+  myname: string;
+  to: string;
+  cost: number;
   status: Status;
-  createdBy: string;
-  createdOn: string;
-  updatedon: string;
+  created: string;
+  due: string;
 }
 
 const initialData: Invoice[] = [
-  { id: 101, bulkname: "PineappleInc111.",status: "Paid",  createdBy: "Redq Inc.",createdOn: "01 April 2025", updatedon: "05 April 2025" },
-  { id: 102, bulkname: "Pineapple.", status: "Overdue", createdBy: "ME Inc.",createdOn: "02 April 2025", updatedon: "07 April 2025" },
-  { id: 103, bulkname: "Incorporation.", status: "Pending", createdBy: "Redirwed.", createdOn: "03 April 2025", updatedon: "08 April 2025" },
-  { id: 104, bulkname: "PineappleTimes.",status: "Paid", createdBy: "RFc.", createdOn: "04 April 2025", updatedon: "09 April 2025" },
-  { id: 105, bulkname: "FortuneCreation",status: "Overdue", createdBy: "Soft solution.", createdOn: "05 April 2025", updatedon: "10 April 2025" },
+  { id: 101, myname: "PineappleInc111.", to: "Redq Inc.", cost: 90, status: "Paid", created: "01 April 2025", due: "05 April 2025" },
+  { id: 102, myname: "Pineapple.", to: "ME Inc.", cost: 120, status: "Overdue", created: "02 April 2025", due: "07 April 2025" },
+  { id: 103, myname: "Incorporation.", to: "Redirwed.", cost: 60, status: "Pending", created: "03 April 2025", due: "08 April 2025" },
+  { id: 104, myname: "PineappleTimes.", to: "RFc.", cost: 200, status: "Paid", created: "04 April 2025", due: "09 April 2025" },
+  { id: 105, myname: "FortuneCreation", to: "Soft solution.", cost: 150, status: "Overdue", created: "05 April 2025", due: "10 April 2025" },
 ];
 
 const statusColor = {
@@ -69,11 +69,12 @@ export default function InvoicePage() {
 
   const [filters, setFilters] = useState<Record<keyof Invoice, any[]>>({
     id: [],
-    bulkname: [],
+    myname: [],
+    to: [],
+    cost: [],
     status: [],
-    createdBy: [],
-    createdOn: [],
-    updatedon: [],
+    created: [],
+    due: [],
   });
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -132,18 +133,19 @@ export default function InvoicePage() {
         return (
           (tab === "All" || row.status === tab) &&
           (filters.id.length ? filters.id.includes(row.id) : true) &&
-          (filters.bulkname.length ? filters.bulkname.includes(row.bulkname) : true) &&
+          (filters.myname.length ? filters.myname.includes(row.myname) : true) &&
+          (filters.to.length ? filters.to.includes(row.to) : true) &&
+          (filters.cost.length ? filters.cost.includes(row.cost) : true) &&
           (filters.status.length ? filters.status.includes(row.status) : true) &&
-          (filters.createdBy.length ? filters.createdBy.includes(row.createdBy) : true) &&
-          (filters.createdOn.length ? filters.createdOn.includes(row.createdOn) : true) &&
-          (filters.updatedon.length ? filters.updatedon.includes(row.updatedon) : true)
+          (filters.created.length ? filters.created.includes(row.created) : true) &&
+          (filters.due.length ? filters.due.includes(row.due) : true)
         );
       })
       .sort((a, b) => {
         let valueA: any = a[orderBy];
         let valueB: any = b[orderBy];
 
-        if (orderBy === "createdOn" || orderBy === "updatedon") {
+        if (orderBy === "created" || orderBy === "due") {
           valueA = parseDate(valueA);
           valueB = parseDate(valueB);
         }
@@ -184,17 +186,18 @@ export default function InvoicePage() {
 
           return {
             id: Number(row.id),
-            bulkname: row.bulkname,
+            myname: row.myname,
+            to: row.to,
+            cost: Number(row.cost),
             status,
-            createdBy: row.createdBy,
-            createdOn: row.createdon,
-            updatedon: row.updatedon,
+            created: row.created,
+            due: row.due,
           } as Invoice;
         });
         setData((prev) => [...prev, ...parsedData]);
         e.target.value = "";
       },
-      error: (err: any) => console.error("CSV Parse Error:", err),
+      error: (err) => console.error("CSV Parse Error:", err),
     });
   };
 
@@ -206,10 +209,6 @@ export default function InvoicePage() {
 
   return (
     <Box p={3}>
-	 <Typography variant="h6" mb={2}>
-			Questions Bulk Upload
-        </Typography>
-		
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         {/* Tabs */}
         <Box className="grid grid-cols-12 gap-6 mb-4">
@@ -228,7 +227,7 @@ export default function InvoicePage() {
           <Button
             variant="outlined"
             onClick={() =>
-              setFilters({ id: [], bulkname: [], status: [], createdBy: [], createdOn: [], updatedon: [] })
+              setFilters({ id: [], myname: [], to: [], cost: [], status: [], created: [], due: [] })
             }
           >
             Clear Filters
@@ -238,14 +237,23 @@ export default function InvoicePage() {
             Bulk Upload
             <input type="file" hidden accept=".csv" onChange={handleBulkUpload} />
           </Button>
-
         </Box>
 
         {/* Table */}
         <Table>
           <TableHead>
             <TableRow>
-              {["id", "bulkname","status", "createdBy", "createdOn", "updatedon"].map((col) => (
+              <TableCell padding="checkbox">
+                <Checkbox
+                  checked={selected.length === paginated.length && paginated.length > 0}
+                  indeterminate={selected.length > 0 && selected.length < paginated.length}
+                  onChange={(e) =>
+                    e.target.checked ? setSelected(paginated.map((row) => row.id)) : setSelected([])
+                  }
+                />
+              </TableCell>
+
+              {["id", "myname", "to", "cost", "status", "created", "due"].map((col) => (
                 <TableCell key={col}>
                   <Box display="flex" alignItems="center">
                     <TableSortLabel
@@ -284,23 +292,35 @@ export default function InvoicePage() {
 
             {paginated.map((row) => (
               <TableRow key={row.id}>
+                <TableCell>
+                  <Checkbox checked={selected.includes(row.id)} onChange={() => toggleSelect(row.id)} />
+                </TableCell>
+
                 <TableCell>{row.id}</TableCell>
-                <TableCell>{row.bulkname}</TableCell>
-               
+                <TableCell>{row.myname}</TableCell>
+                <TableCell>{row.to}</TableCell>
+                <TableCell>{row.cost}</TableCell>
+
                 <TableCell>
                   <Chip label={row.status} color={statusColor[row.status]} size="small" />
                 </TableCell>
-                <TableCell>{row.createdBy}</TableCell>
-                <TableCell>{row.createdOn}</TableCell>
-                <TableCell>{row.updatedon}</TableCell>
+
+                <TableCell>{row.created}</TableCell>
+                <TableCell>{row.due}</TableCell>
 
                 <TableCell>
-                  
-                <Link href={`/bulk-upload/${row.id}/preview`} passHref>
-                  <IconButton color="info">
-                    <VisibilityIcon />
-                  </IconButton>
-                </Link>
+                  <Link href={`/QuestionsList/${row.id}/edit`} passHref>
+                    <IconButton color="primary">
+                      <EditIcon />
+                    </IconButton>
+                  </Link>
+
+                  <Link href={`/QuestionsList/${row.id}/preview`} passHref>
+                    <IconButton color="info">
+                      <VisibilityIcon />
+                    </IconButton>
+                  </Link>
+
                   <IconButton color="error" onClick={() => handleDelete(row.id)}>
                     <DeleteIcon />
                   </IconButton>

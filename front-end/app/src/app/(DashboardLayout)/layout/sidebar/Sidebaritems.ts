@@ -49,40 +49,71 @@ const SidebarContent: MenuItem[] = [
         url: "/mcq-questions",
         isPro: false
       },
-       {
-        name: "Questions List",
-        icon: "solar:notes-minimalistic-outline",
+	  {
+        name: 'Questions',
         id: uniqueId(),
-        url: "/QuestionsList",
-        isPro: false
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Add Questions",
+            id: uniqueId(),
+            url:"/QuestionsList/new",
+            isPro: false
+          },
+          {
+            name: "Questions List",
+            id: uniqueId(),
+            url:"/QuestionsList",
+            isPro: false
+          },
+          {
+            name: "Questions Bulk Upload",
+            id: uniqueId(),
+            url:"/bulk-upload",
+            isPro: false
+          }
+        ],
       },
-      {
-        name: "Add Questions",
-        icon: "solar:notes-minimalistic-outline",
+	  {
+        name: 'Templates',
         id: uniqueId(),
-        url: "/QuestionsList/new",
-        isPro: false
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Add Template",
+            id: uniqueId(),
+            url:"/template/new",
+            isPro: false
+          },
+          {
+            name: "Template List",
+            id: uniqueId(),
+            url:"/template",
+            isPro: false
+          }
+        ],
       },
-      {
-        name: "Bulk Upload",
-        icon: "solar:notes-minimalistic-outline",
+	  {
+        name: 'Users',
         id: uniqueId(),
-        url: "/bulk-upload",
-        isPro: false
-      },
-      {
-        name: "Users List",
-        icon: "solar:notes-minimalistic-outline",
-        id: uniqueId(),
-        url: "/users",
-        isPro: false
-      },
-      {
-        name: "Users to Profile Mapping",
-        icon: "solar:notes-minimalistic-outline",
-        id: uniqueId(),
-        url: "/user-profile/mapping",
-        isPro: false
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Users List",
+            id: uniqueId(),
+            url:"/users",
+            isPro: false
+          },
+          {
+            name: "Users to Profile Mapping",
+            id: uniqueId(),
+            url:"/user-profile/mapping",
+            isPro: false
+          }
+        ],
       },
       {
         name: "Dashboard1",

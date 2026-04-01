@@ -224,7 +224,7 @@ export default function MultiQuestionPage() {
     <Box p={3}>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" mb={2}>
-          Create Multiple Questions
+          Add Single/Multiple Questions
         </Typography>
 
         {/* Class */}

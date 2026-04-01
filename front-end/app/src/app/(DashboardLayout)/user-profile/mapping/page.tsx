@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; // ✅ FIX
+
 import {
   Grid,
   Card,
@@ -18,13 +19,14 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function UserProfilesMatdash() {
-  const [users, setUsers] = useState([]);
-  const [profilesMaster, setProfilesMaster] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const [selectedProfileId, setSelectedProfileId] = useState("");
+  const [users, setUsers] = useState<any[]>([]);
+  const [profilesMaster, setProfilesMaster] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | "">("");
   const [search, setSearch] = useState("");
 
   const [page, setPage] = useState(1);
@@ -39,13 +41,20 @@ export default function UserProfilesMatdash() {
   const fetchUsers = async () => {
     const res = await fetch("/matdash-nextjs/api/users");
     const data = await res.json();
-    setUsers(data);
+
+    // 🛡️ ensure profiles exists
+    const safeData = data.map((u: any) => ({
+      ...u,
+      profiles: u.profiles || [],
+    }));
+
+    setUsers(safeData);
   };
 
   const fetchProfiles = async () => {
     const res = await fetch("/matdash-nextjs/api/profiles");
     const data = await res.json();
-    setProfilesMaster(data);
+    setProfilesMaster(data || []);
   };
 
   // ✅ Selected user
@@ -55,13 +64,11 @@ export default function UserProfilesMatdash() {
   );
 
   // 🔍 Search
-  const filteredUsers = useMemo(
-    () =>
-      users.filter((u) =>
-        u.name.toLowerCase().includes(search.toLowerCase())
-      ),
-    [users, search]
-  );
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) =>
+      (u.name || "").toLowerCase().includes(search.toLowerCase())
+    );
+  }, [users, search]);
 
   // 📄 Pagination
   const paginatedUsers = useMemo(() => {
@@ -71,12 +78,14 @@ export default function UserProfilesMatdash() {
 
   useEffect(() => setPage(1), [search]);
 
-  // 🔥 GLOBAL assigned profiles (CRITICAL FIX)
+  // 🔥 GLOBAL assigned profiles
   const assignedProfileIds = useMemo(() => {
-    return users.flatMap((u) => u.profiles.map((p) => p.id));
+    return users.flatMap((u) =>
+      (u.profiles || []).map((p: any) => p.id)
+    );
   }, [users]);
 
-  // ✅ Only unassigned profiles available
+  // ✅ Available profiles
   const availableProfiles = useMemo(() => {
     return profilesMaster.filter(
       (p) => !assignedProfileIds.includes(p.id)
@@ -87,21 +96,11 @@ export default function UserProfilesMatdash() {
   const addProfile = async () => {
     if (!selectedProfileId || !selectedUserId) return;
 
-    // 🛡️ extra frontend safety
-    const isAlreadyAssigned = users.some((u) =>
-      u.profiles.some((p) => p.id === selectedProfileId)
-    );
-
-    if (isAlreadyAssigned) {
-      alert("Profile already assigned!");
-      return;
-    }
-
     const res = await fetch("/matdash-nextjs/api/user-profile", {
       method: "POST",
       body: JSON.stringify({
         userId: selectedUserId,
-        profileId: selectedProfileId,
+        profileId: Number(selectedProfileId), // ✅ FIX
       }),
     });
 
@@ -117,7 +116,7 @@ export default function UserProfilesMatdash() {
         user.id === selectedUserId
           ? {
               ...user,
-              profiles: [...user.profiles, profile],
+              profiles: [...(user.profiles || []), profile],
             }
           : user
       )
@@ -127,7 +126,7 @@ export default function UserProfilesMatdash() {
   };
 
   // ❌ Remove profile
-  const deleteProfile = async (profileId) => {
+  const deleteProfile = async (profileId: number) => {
     await fetch("/matdash-nextjs/api/user-profile", {
       method: "DELETE",
       body: JSON.stringify({
@@ -141,7 +140,9 @@ export default function UserProfilesMatdash() {
         user.id === selectedUserId
           ? {
               ...user,
-              profiles: user.profiles.filter((p) => p.id !== profileId),
+              profiles: (user.profiles || []).filter(
+                (p: any) => p.id !== profileId
+              ),
             }
           : user
       )
@@ -149,119 +150,126 @@ export default function UserProfilesMatdash() {
   };
 
   return (
-    <Grid container spacing={3}>
-      {/* USERS */}
-      <Grid item xs={12} md={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6">Users</Typography>
+    <Box p={3}>
+      <Typography variant="h6" mb={2}>
+        User to Profile Mapping
+      </Typography>
 
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Search user..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{ my: 2 }}
-            />
+      <Grid container spacing={3}>
+        {/* USERS */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Users</Typography>
 
-            <List>
-              {paginatedUsers.map((user) => (
-                <ListItemButton
-                  key={user.id}
-                  selected={selectedUserId === user.id}
-                  onClick={() => setSelectedUserId(user.id)}
-                >
-                  <ListItemText
-                    primary={user.name}
-                    secondary={`${user.profiles.length} profiles`}
-                  />
-                </ListItemButton>
-              ))}
-            </List>
-
-            <Box display="flex" justifyContent="center" mt={2}>
-              <Pagination
-                count={Math.ceil(filteredUsers.length / usersPerPage)}
-                page={page}
-                onChange={(e, val) => setPage(val)}
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search user..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                sx={{ my: 2 }}
               />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
 
-      {/* PROFILES */}
-      <Grid item xs={12} md={8}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" mb={2}>
-              {selectedUser
-                ? `${selectedUser.name}'s Profiles`
-                : "Profiles"}
-            </Typography>
-
-            {!selectedUser ? (
-              <Typography>Select a user</Typography>
-            ) : (
-              <>
-                {selectedUser.profiles.map((profile) => (
-                  <Box
-                    key={profile.id}
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={1}
-                    p={1}
-                    border="1px solid #eee"
-                    borderRadius={2}
+              <List>
+                {paginatedUsers.map((user) => (
+                  <ListItemButton
+                    key={user.id}
+                    selected={selectedUserId === user.id}
+                    onClick={() => setSelectedUserId(user.id)}
                   >
-                    <Typography>{profile.title}</Typography>
-                    <IconButton
-                      color="error"
-                      onClick={() => deleteProfile(profile.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                    <ListItemText
+                      primary={user.name}
+                      secondary={`${(user.profiles || []).length} profiles`}
+                    />
+                  </ListItemButton>
                 ))}
+              </List>
 
-                <Divider sx={{ my: 2 }} />
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Pagination
+                  count={Math.ceil(filteredUsers.length / usersPerPage)}
+                  page={page}
+                  onChange={(e, val) => setPage(val)}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-                {/* Assign */}
-                <Box display="flex" gap={2}>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={selectedProfileId}
-                    displayEmpty
-                    onChange={(e) =>
-                      setSelectedProfileId(e.target.value)
-                    }
-                  >
-                    <MenuItem value="">Select Profile</MenuItem>
-                    {availableProfiles.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>
-                        {p.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
+        {/* PROFILES */}
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" mb={2}>
+                {selectedUser
+                  ? `${selectedUser.name}'s Profiles`
+                  : "Profiles"}
+              </Typography>
 
-                  <Button
-                    variant="contained"
-                    onClick={addProfile}
-                    disabled={
-                      !selectedProfileId || availableProfiles.length === 0
-                    }
-                  >
-                    Assign
-                  </Button>
-                </Box>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              {!selectedUser ? (
+                <Typography>Select a user</Typography>
+              ) : (
+                <>
+                  {(selectedUser.profiles || []).map((profile: any) => (
+                    <Box
+                      key={profile.id}
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      mb={1}
+                      p={1}
+                      border="1px solid #eee"
+                      borderRadius={2}
+                    >
+                      <Typography>{profile.title}</Typography>
+                      <IconButton
+                        color="error"
+                        onClick={() => deleteProfile(profile.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  ))}
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Box display="flex" gap={2}>
+                    <Select
+                      fullWidth
+                      size="small"
+                      value={selectedProfileId}
+                      displayEmpty
+                      onChange={(e) =>
+                        setSelectedProfileId(Number(e.target.value))
+                      }
+                    >
+                      <MenuItem value="">Select Profile</MenuItem>
+
+                      {availableProfiles.map((p) => (
+                        <MenuItem key={p.id} value={p.id}>
+                          {p.title}
+                        </MenuItem>
+                      ))}
+                    </Select>
+
+                    <Button
+                      variant="contained"
+                      onClick={addProfile}
+                      disabled={
+                        !selectedProfileId ||
+                        availableProfiles.length === 0
+                      }
+                    >
+                      Assign
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
+    </Box>
   );
 }
