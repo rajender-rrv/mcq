@@ -70,7 +70,7 @@ const SidebarContent: MenuItem[] = [
           {
             name: "Questions Bulk Upload",
             id: uniqueId(),
-            url:"/bulk-upload",
+            url:"/questions-bulk-upload",
             isPro: false
           }
         ],
@@ -105,6 +105,24 @@ const SidebarContent: MenuItem[] = [
             name: "Users List",
             id: uniqueId(),
             url:"/users",
+            isPro: false
+          }, 
+          {
+            name: "Add Profile",
+            id: uniqueId(),
+            url:"/profile/new",
+            isPro: false
+          },
+          {
+            name: "Profile List",
+            id: uniqueId(),
+            url:"/profile",
+            isPro: false
+          },
+          {
+            name: "Profile Bulk Upload",
+            id: uniqueId(),
+            url:"/profile-bulk-upload",
             isPro: false
           },
           {

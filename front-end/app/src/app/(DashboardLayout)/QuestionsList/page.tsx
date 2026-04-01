@@ -17,13 +17,17 @@ import {
   Button,
   Chip,
   Typography,
+  Menu,
+  MenuItem,
+  ListItemText,
+  Checkbox as MUICheckbox,
+  TextField,
 } from "@mui/material";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-const Papa = require("papaparse");
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 type Status = "Paid" | "Overdue" | "Pending" | "Draft";
 
@@ -37,23 +41,6 @@ interface Invoice {
   due: string;
 }
 
-// ✅ Tailwind-safe mapping
-const bgColorsMap: any = {
-  All: "bg-lightprimary",
-  Paid: "bg-lightsuccess",
-  Overdue: "bg-lighterror",
-  Pending: "bg-lightwarning",
-  Draft: "bg-default",
-};
-
-const textColorsMap: any = {
-  All: "text-primary",
-  Paid: "text-success",
-  Overdue: "text-error",
-  Pending: "text-warning",
-  Draft: "text-default",
-};
-
 const statusColor = {
   Paid: "success",
   Overdue: "error",
@@ -61,10 +48,36 @@ const statusColor = {
   Draft: "default",
 } as const;
 
+const defaultFilters: Record<keyof Invoice, string[]> = {
+  id: [],
+  question_text: [],
+  to: [],
+  cost: [],
+  status: [],
+  created: [],
+  due: [],
+};
+
+// ✅ Tailwind-safe classes
+const bgClassMap = [
+  "bg-blue-100",
+  "bg-yellow-100",
+  "bg-green-100",
+  "bg-red-100",
+  "bg-gray-100",
+];
+
+const textClassMap = [
+  "text-blue-600",
+  "text-yellow-600",
+  "text-green-600",
+  "text-red-600",
+  "text-gray-600",
+];
+
 export default function InvoicePage() {
   const [data, setData] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const [tab, setTab] = useState<Status | "All">("All");
   const [selected, setSelected] = useState<number[]>([]);
@@ -73,252 +86,362 @@ export default function InvoicePage() {
   const [orderBy, setOrderBy] = useState<keyof Invoice>("id");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
 
-  // ✅ FETCH DATA (FIXED)
+  const [columnFilters, setColumnFilters] =
+    useState<Record<keyof Invoice, string[]>>(defaultFilters);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [activeColumn, setActiveColumn] = useState<keyof Invoice | null>(null);
+  const [filterSearch, setFilterSearch] = useState("");
+
+  // ✅ FETCH DATA
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
-        setLoading(true);
-
         const res = await fetch("/matdash-nextjs/api/questions");
+        const result = await res.json();
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch");
-        }
+        const users = Array.isArray(result?.results)
+          ? result.results
+          : Array.isArray(result)
+          ? result
+          : [];
 
-        const result = await res.json(); // ✅ ONLY ONCE
-        console.log("API:", result);
-
-        const users = result.results || result;
-
-        const formatted: Invoice[] = users.map((user: any, index: number) => ({
-          id: user.id || index + 1,
-          question_text: user.name || user.question_text || "N/A",
-          to: user.email || "N/A",
-          cost: Number(user.cost) || 0,
-          status: ["Paid", "Overdue", "Pending", "Draft"].includes(user.status)
-            ? user.status
+        const formatted: Invoice[] = users.map((u: any, i: number) => ({
+          id: u.id || i + 1,
+          question_text: u.question_text || "N/A",
+          to: u.email || "N/A",
+          cost: Number(u.cost) || 0,
+          status: ["Paid", "Overdue", "Pending", "Draft"].includes(u.status)
+            ? u.status
             : "Draft",
-          created: user.created_at || "01 Jan 2025",
-          due: user.due_date || "05 Jan 2025",
+          created: u.created_at || "2025-01-01",
+          due: u.due_date || "2025-01-05",
         }));
 
         setData(formatted);
       } catch (err) {
-        console.error(err);
-        setError("Failed to load users");
+        console.error("Fetch error:", err);
       } finally {
-        setLoading(false); // ✅ IMPORTANT
+        setLoading(false);
       }
     };
 
-    fetchUsers();
+    fetchData();
   }, []);
 
-  // Reset page when tab changes
   useEffect(() => {
-    setPage(0);
     setSelected([]);
-  }, [tab]);
+  }, [tab, columnFilters]);
 
-  // Sorting
-  const handleSort = (column: keyof Invoice) => {
-    const isAsc = orderBy === column && order === "asc";
+  const getTabCount = (t: Status | "All") => {
+    if (t === "All") return data.length;
+    return data.filter((d) => d.status === t).length;
+  };
+
+  const handleSort = (col: keyof Invoice) => {
+    const isAsc = orderBy === col && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(column);
+    setOrderBy(col);
   };
 
-  const parseDate = (str: string) => {
-    const [day, month, year] = str.split(" ");
-    const monthIndex = new Date(`${month} 1, 2000`).getMonth();
-    return new Date(Number(year), monthIndex, Number(day)).getTime();
+  const handleFilterClick = (
+    e: React.MouseEvent<HTMLElement>,
+    col: keyof Invoice
+  ) => {
+    setAnchorEl(e.currentTarget);
+    setActiveColumn(col);
+    setFilterSearch("");
   };
 
-  // Filter + Sort
-  const filtered = useMemo(() => {
-    return data
-      .filter((row) => (tab === "All" ? true : row.status === tab))
-      .sort((a, b) => {
-        let valueA: any = a[orderBy];
-        let valueB: any = b[orderBy];
+  const handleCheckboxChange = (col: keyof Invoice, value: string) => {
+    setColumnFilters((prev) => {
+      const current = prev[col];
+      return {
+        ...prev,
+        [col]: current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value],
+      };
+    });
+    setPage(0);
+  };
 
-        if (orderBy === "created" || orderBy === "due") {
-          valueA = parseDate(valueA);
-          valueB = parseDate(valueB);
-        }
-
-        if (valueA === valueB) return 0;
-
-        return order === "asc"
-          ? valueA > valueB ? 1 : -1
-          : valueA < valueB ? 1 : -1;
-      });
-  }, [data, tab, order, orderBy]);
-
-  const paginated = useMemo(() => {
-    return filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [filtered, page, rowsPerPage]);
-
-  const toggleSelect = (id: number) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  const getFilteredValues = (col: keyof Invoice) => {
+    const values = [...new Set(data.map((r) => String(r[col])))];
+    return values.filter((val) =>
+      val.toLowerCase().includes(filterSearch.toLowerCase())
     );
   };
 
-  const handleDelete = async (id: number) => {
-    const backendUrl = process.env.API_BASE_URL;
-    await fetch(`${backendUrl}/users/${id}/`, {
-      method: "DELETE",
-    });
-
-    setData((prev) => prev.filter((item) => item.id !== id));
+  const parseDate = (str: string) => {
+    const date = new Date(str);
+    return isNaN(date.getTime()) ? 0 : date.getTime();
   };
 
-  const handleBulkUpload = (e: any) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const filtered = useMemo(() => {
+    return data
+      .filter((row) => (tab === "All" ? true : row.status === tab))
+      .filter((row) =>
+        Object.keys(columnFilters).every((col) => {
+          const selectedVals = columnFilters[col as keyof Invoice];
+          if (!selectedVals.length) return true;
+          return selectedVals.includes(String((row as any)[col]));
+        })
+      )
+      .sort((a, b) => {
+        let A: any = a[orderBy];
+        let B: any = b[orderBy];
 
-    Papa.parse(file, {
-      header: true,
-      complete: (results: any) => {
-        const parsed = results.data.map((row: any, i: number) => ({
-          id: Number(row.id) || Date.now() + i,
-          question_text: row.question_text,
-          to: row.to,
-          cost: Number(row.cost) || 0,
-          status: row.status || "Draft",
-          created: row.created,
-          due: row.due,
-        }));
-        setData((prev) => [...prev, ...parsed]);
-      },
-    });
+        if (orderBy === "created" || orderBy === "due") {
+          A = parseDate(A);
+          B = parseDate(B);
+        }
+
+        return order === "asc"
+          ? A > B
+            ? 1
+            : A < B
+            ? -1
+            : 0
+          : A < B
+          ? 1
+          : A > B
+          ? -1
+          : 0;
+      });
+  }, [data, columnFilters, tab, order, orderBy]);
+
+  const paginated = filtered.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const isAllSelected =
+    paginated.length > 0 &&
+    paginated.every((row) => selected.includes(row.id));
+
+  const isIndeterminate =
+    paginated.some((row) => selected.includes(row.id)) && !isAllSelected;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const ids = paginated.map((r) => r.id);
+      setSelected((prev) => [...new Set([...prev, ...ids])]);
+    } else {
+      const ids = paginated.map((r) => r.id);
+      setSelected((prev) => prev.filter((id) => !ids.includes(id)));
+    }
   };
 
-  const getTabCount = (status: Status | "All") =>
-    status === "All"
-      ? data.length
-      : data.filter((r) => r.status === status).length;
+  const handleClearFilters = () => {
+    setColumnFilters(defaultFilters);
+    setTab("All");
+    setFilterSearch("");
+    setPage(0);
+    setSelected([]);
+    setAnchorEl(null);
+    setActiveColumn(null);
+  };
 
   return (
-    <Box p={3}>
-	  <Typography variant="h6" mb={2}>
+    <>
+
+
+      <Box p={3}>
+	   <Typography variant="h6" mb={2}>
 			Questions List
         </Typography>
-		
-      <Paper sx={{ p: 3, borderRadius: 3 }}>
-	  
-        {/* Tabs */}
-        <Box className="grid grid-cols-12 gap-6 mb-4">
-          {["All", "Paid", "Overdue", "Pending", "Draft"].map((t) => (
+
+	
+
+        <Paper sx={{ p: 3, mt: 2 }}>
+			{/* Tabs */}
+      <Box className="grid grid-cols-12 gap-6 mb-4">
+        {["All", "Paid", "Overdue", "Pending", "Draft"].map((t, index) => (
+          <Box
+            key={t}
+            className="lg:col-span-2 md:col-span-4 col-span-6 cursor-pointer"
+            onClick={() => setTab(t as Status | "All")}
+          >
             <Box
-              key={t}
-              className="lg:col-span-2 md:col-span-4 col-span-6 cursor-pointer"
-              onClick={() => setTab(t as any)}
+              className={`p-6 rounded-md text-center border ${
+                bgClassMap[index]
+              } ${tab === t ? "border-blue-500" : "border-gray-200"}`}
             >
-              <Box
-                className={`p-6 rounded-md text-center border 
-                ${bgColorsMap[t]} 
-                ${tab === t ? "border-primary" : "border-gray-200"}`}
-              >
-                <h3 className={`text-2xl font-semibold ${textColorsMap[t]}`}>
-                  {getTabCount(t as any)}
-                </h3>
-                <h6 className={`text-base font-medium ${textColorsMap[t]}`}>
-                  {t}
-                </h6>
-              </Box>
+              <h3 className={`text-2xl font-semibold ${textClassMap[index]}`}>
+                {getTabCount(t as Status | "All")}
+              </h3>
+              <h6 className={`text-base font-medium ${textClassMap[index]}`}>
+                {t}
+              </h6>
             </Box>
-          ))}
-        </Box>
+          </Box>
+        ))}
+      </Box>
+          {/* Buttons */}
+          <Box display="flex" justifyContent="space-between" mb={2}>
+            <Button onClick={handleClearFilters} variant="outlined">
+              Clear Filters
+            </Button>
 
-        {/* Actions */}
-        <Box display="flex" gap={2} mb={2}>
-          <Button onClick={() => setData([])}>Clear Data</Button>
+            <Link href="/QuestionsList/new">
+              <Button variant="contained">Add Question</Button>
+            </Link>
+          </Box>
 
-          <Button component="label" variant="contained">
-            Bulk Upload
-            <input hidden type="file" onChange={handleBulkUpload} />
-          </Button>
-        </Box>
+          {loading ? (
+            "Loading..."
+          ) : (
+            <>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={isAllSelected}
+                        indeterminate={isIndeterminate}
+                        onChange={(e) =>
+                          handleSelectAll(e.target.checked)
+                        }
+                      />
+                    </TableCell>
 
-        {/* Loading / Error */}
-        {loading && <Box textAlign="center">Loading...</Box>}
-        {error && <Box color="error.main">{error}</Box>}
+                    {Object.keys(defaultFilters).map((col) => (
+                      <TableCell key={col}>
+                        <Box display="flex" alignItems="center">
+                          <TableSortLabel
+                            active={orderBy === col}
+                            direction={order}
+                            onClick={() => handleSort(col as keyof Invoice)}
+                          >
+                            {col.toUpperCase()}
+                          </TableSortLabel>
 
-        {/* Table */}
-        {!loading && (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell />
-                {["id","question_text","to","cost","status","created","due"].map((col) => (
-                  <TableCell key={col}>
-                    <TableSortLabel
-                      active={orderBy === col}
-                      direction={order}
-                      onClick={() => handleSort(col as any)}
+                          <IconButton
+                            size="small"
+                            onClick={(e) =>
+                              handleFilterClick(
+                                e,
+                                col as keyof Invoice
+                              )
+                            }
+                          >
+                            <FilterListIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    ))}
+
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {paginated.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} align="center">
+                        No data found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginated.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selected.includes(row.id)}
+                            onChange={() =>
+                              setSelected((prev) =>
+                                prev.includes(row.id)
+                                  ? prev.filter((x) => x !== row.id)
+                                  : [...prev, row.id]
+                              )
+                            }
+                          />
+                        </TableCell>
+
+                        <TableCell>{row.id}</TableCell>
+                        <TableCell>{row.question_text}</TableCell>
+                        <TableCell>{row.to}</TableCell>
+                        <TableCell>{row.cost}</TableCell>
+
+                        <TableCell>
+                          <Chip
+                            label={row.status}
+                            color={statusColor[row.status]}
+                            size="small"
+                          />
+                        </TableCell>
+
+                        <TableCell>{row.created}</TableCell>
+                        <TableCell>{row.due}</TableCell>
+
+                        <TableCell>
+                          <IconButton><EditIcon /></IconButton>
+                          <IconButton><VisibilityIcon /></IconButton>
+                          <IconButton color="error">
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              <TablePagination
+                component="div"
+                count={filtered.length}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={(_, p) => setPage(p)}
+                onRowsPerPageChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value));
+                  setPage(0);
+                }}
+              />
+
+              {/* Filter Menu */}
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <Box p={1}>
+                  <TextField
+                    size="small"
+                    placeholder="Search..."
+                    value={filterSearch}
+                    onChange={(e) => setFilterSearch(e.target.value)}
+                    fullWidth
+                  />
+                </Box>
+
+                {activeColumn &&
+                  getFilteredValues(activeColumn).map((val) => (
+                    <MenuItem
+                      key={val}
+                      onClick={() =>
+                        handleCheckboxChange(activeColumn, val)
+                      }
                     >
-                      {col.toUpperCase()}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
+                      <MUICheckbox
+                        checked={
+                          columnFilters[activeColumn].includes(val)
+                        }
+                      />
+                      <ListItemText primary={val} />
+                    </MenuItem>
+                  ))}
 
-            <TableBody>
-              {paginated.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selected.includes(row.id)}
-                      onChange={() => toggleSelect(row.id)}
-                    />
-                  </TableCell>
-
-                  <TableCell>{row.id}</TableCell>
-                  <TableCell>{row.question_text}</TableCell>
-                  <TableCell>{row.to}</TableCell>
-                  <TableCell>{row.cost}</TableCell>
-
-                  <TableCell>
-                    <Chip
-                      label={row.status}
-                      color={statusColor[row.status]}
-                      size="small"
-                    />
-                  </TableCell>
-
-                  <TableCell>{row.created}</TableCell>
-                  <TableCell>{row.due}</TableCell>
-
-                  <TableCell>
-                    <IconButton><EditIcon /></IconButton>
-                    <IconButton><VisibilityIcon /></IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(row.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        <TablePagination
-          component="div"
-          count={filtered.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, p) => setPage(p)}
-          onRowsPerPageChange={(e) =>
-            setRowsPerPage(parseInt(e.target.value))
-          }
-        />
-      </Paper>
-    </Box>
+                {activeColumn &&
+                  getFilteredValues(activeColumn).length === 0 && (
+                    <MenuItem disabled>No results</MenuItem>
+                  )}
+              </Menu>
+            </>
+          )}
+        </Paper>
+      </Box>
+    </>
   );
 }
