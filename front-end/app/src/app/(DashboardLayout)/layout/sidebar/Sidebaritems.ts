@@ -96,7 +96,7 @@ const SidebarContent: MenuItem[] = [
         ],
       },
 	  {
-        name: 'Users',
+        name: 'Users & Profiles',
         id: uniqueId(),
         icon: 'solar:home-angle-linear',
         url: '#',
@@ -131,6 +131,51 @@ const SidebarContent: MenuItem[] = [
             url:"/user-profile/mapping",
             isPro: false
           }
+        ],
+      }, 
+	  {
+        name: 'Matser Details',
+        id: uniqueId(),
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Add Class",
+            id: uniqueId(),
+            url:"/class/new",
+            isPro: false
+          },
+		  {
+            name: "Class List",
+            id: uniqueId(),
+            url:"/class",
+            isPro: false
+          },
+		  {
+            name: "Add Subject",
+            id: uniqueId(),
+            url:"/subject/new",
+            isPro: false
+          },
+		  {
+            name: "Subject List",
+            id: uniqueId(),
+            url:"/subject",
+            isPro: false
+          },
+		  {
+            name: "Add Category",
+            id: uniqueId(),
+            url:"/category/new",
+            isPro: false
+          },
+		  {
+            name: "Category List",
+            id: uniqueId(),
+            url:"/category",
+            isPro: false
+          }, 
+          
         ],
       },
       {

@@ -248,13 +248,11 @@ export default function InvoicePage() {
 
 
       <Box p={3}>
+	    <Paper sx={{ p: 3}}>
 	   <Typography variant="h6" mb={2}>
 			Profile Bulk Upload
         </Typography>
 
-	
-
-        <Paper sx={{ p: 3, mt: 2 }}>
 			{/* Tabs */}
       <Box className="grid grid-cols-12 gap-6 mb-4">
         {["All", "Paid", "Overdue", "Pending", "Draft"].map((t, index) => (

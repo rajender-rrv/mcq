@@ -18,6 +18,7 @@ import {
   Pagination,
   Select,
   MenuItem,
+  Paper
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -151,6 +152,7 @@ export default function UserProfilesMatdash() {
 
   return (
     <Box p={3}>
+	 <Paper sx={{ p: 3 }}>
       <Typography variant="h6" mb={2}>
         User to Profile Mapping
       </Typography>
@@ -270,6 +272,7 @@ export default function UserProfilesMatdash() {
           </Card>
         </Grid>
       </Grid>
+	  </Paper>
     </Box>
   );
 }

@@ -97,7 +97,7 @@ export default function InvoicePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-		const res = await fetch("/matdash-nextjs/api/users/allusers");
+        const res = await fetch("/matdash-nextjs/api/template");
         const result = await res.json();
 
         const users = Array.isArray(result?.results)
@@ -108,7 +108,7 @@ export default function InvoicePage() {
 
         const formatted: Invoice[] = users.map((u: any, i: number) => ({
           id: u.id || i + 1,
-          name: u.username || "N/A",
+          name: u.name || "N/A",
           to: u.email || "N/A",
           cost: Number(u.cost) || 0,
           status: ["Paid", "Overdue", "Pending", "Draft"].includes(u.status)
@@ -250,9 +250,9 @@ export default function InvoicePage() {
       <Box p={3}>
 	  <Paper sx={{ p: 3 }}>
 	   <Typography variant="h6" mb={2}>
-			Questions Bulk Upload
+			Class List
         </Typography>
-
+		
 			{/* Tabs */}
       <Box className="grid grid-cols-12 gap-6 mb-4">
         {["All", "Paid", "Overdue", "Pending", "Draft"].map((t, index) => (
@@ -282,8 +282,8 @@ export default function InvoicePage() {
               Clear Filters
             </Button>
 
-            <Link href="/questions-bulk-upload">
-              <Button variant="contained">Bulk Upload</Button>
+            <Link href="/template/new">
+              <Button variant="contained">Add Template</Button>
             </Link>
           </Box>
 
