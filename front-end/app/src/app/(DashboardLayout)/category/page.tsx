@@ -282,8 +282,8 @@ export default function InvoicePage() {
               Clear Filters
             </Button>
 
-            <Link href="/template/new">
-              <Button variant="contained">Add Template</Button>
+            <Link href="/category/new">
+              <Button variant="contained">Add Category</Button>
             </Link>
           </Box>
 
