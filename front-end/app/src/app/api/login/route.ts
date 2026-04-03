@@ -46,7 +46,21 @@ export async function POST(req: Request) {
       { expiresIn: "1h" }
     );
 	
+	 console.log("USER DEATILS API HIT before ✅");
+	 var access_token = data.access_token;
+	 
+	 const backendRes2 = await fetch(`http://127.0.0.1:8000/users/8`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+		Authorization: `Bearer ${access_token}`, // ✅ correct way
+
+      },
+    });
 	
+	const data2 = await backendRes2.json();
+	
+	console.log(data2);
 	
 	
     const res = NextResponse.json({
@@ -58,6 +72,12 @@ export async function POST(req: Request) {
 res.cookies.set("token", token, {httpOnly: true,secure: process.env.NODE_ENV === "production",sameSite: "strict",path: "/",	maxAge: 60 * 60,});
 res.cookies.set("access_token", data.access_token);
 res.cookies.set("refresh_token", data.refresh_token);
+
+res.cookies.set("id", data2.id);
+res.cookies.set("username", data2.username);
+res.cookies.set("email", data2.email);
+res.cookies.set("role", data2.role);
+
 
     return res;
 

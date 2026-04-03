@@ -31,6 +31,16 @@ export interface MenuItem {
   isPro?: boolean
 }
 
+  const getCookie = (name: string) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+};
+
+const user_id = getCookie("id");
+console.log("sidebar-user_id:::"+user_id);
+
+
 const SidebarContent: MenuItem[] = [
   {
     heading: 'Dashboards',
@@ -140,21 +150,9 @@ const SidebarContent: MenuItem[] = [
         url: '#',
         children: [
           {
-            name: "Add Class",
-            id: uniqueId(),
-            url:"/class/new",
-            isPro: false
-          },
-		  {
             name: "Class List",
             id: uniqueId(),
             url:"/class",
-            isPro: false
-          },
-		  {
-            name: "Add Subject",
-            id: uniqueId(),
-            url:"/subject/new",
             isPro: false
           },
 		  {
@@ -164,17 +162,32 @@ const SidebarContent: MenuItem[] = [
             isPro: false
           },
 		  {
-            name: "Add Category",
-            id: uniqueId(),
-            url:"/category/new",
-            isPro: false
-          },
-		  {
             name: "Category List",
             id: uniqueId(),
             url:"/category",
             isPro: false
           }, 
+          
+        ],
+      },
+	  {
+        name: 'Tests',
+        id: uniqueId(),
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Test Dashboard",
+            id: uniqueId(),
+            url:"/test",
+            isPro: false
+          },
+		  {
+            name: "Test Attempts History",
+            id: uniqueId(),
+            url: `/test/attempt_user/${user_id}/history`,
+            isPro: false
+          }
           
         ],
       },

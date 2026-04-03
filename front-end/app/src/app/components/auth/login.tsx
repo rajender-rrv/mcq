@@ -35,8 +35,8 @@ export const Login = () => {
 		console.log(data);
 
       if (res.ok) {
-        localStorage.setItem("user", JSON.stringify(data));
-        router.push("/");
+       localStorage.setItem("user", JSON.stringify(data));
+       router.push("/");
       } else {
         alert(data.message || "Login failed");
       }
