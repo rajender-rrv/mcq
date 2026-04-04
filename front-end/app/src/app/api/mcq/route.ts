@@ -81,8 +81,10 @@ export async function POST(req: Request) {
         }),
       }
     );
-
-    const data = await backendRes.json();
+	
+console.log( body.answers);
+    
+	const data = await backendRes.json();
 
     return NextResponse.json(data);
   } catch (error) {

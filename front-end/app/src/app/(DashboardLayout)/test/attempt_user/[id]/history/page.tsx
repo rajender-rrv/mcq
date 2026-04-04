@@ -284,10 +284,6 @@ export default function InvoicePage() {
             <Button onClick={handleClearFilters} variant="outlined">
               Clear Filters
             </Button>
-
-            <Link href="/QuestionsList/new">
-              <Button variant="contained">Add Question</Button>
-            </Link>
           </Box>
 
           {loading ? (
@@ -376,26 +372,23 @@ export default function InvoicePage() {
                         <TableCell>{row.created}</TableCell>
                         <TableCell>{row.due}</TableCell>
 
-                       <TableCell>
-  <Link href={`/test/attempt/${row.id}/edit`}>
-    <IconButton>
-      <EditIcon />
-    </IconButton>
-  </Link>
+						<TableCell>
+						  {(row.status === "IN_PROGRESS") && (
+						  <Link href={`/test/attempt/${row.id}/edit`}>
+							<IconButton>
+							  <EditIcon />
+							</IconButton>
+						  </Link>
+						 )}
 
-  <Link href={`/test/attempt/${row.id}/preview`}>
-    <IconButton>
-      <VisibilityIcon />
-    </IconButton>
-  </Link>
-
-  <Link href={`/delete/${row.id}`}>
-    <IconButton color="error">
-      <DeleteIcon />
-    </IconButton>
-  </Link>
-</TableCell>
-
+						  {(row.status === "COMPLETED") && (
+							<Link href={`/test/attempt/${row.id}/preview`}>
+							  <IconButton>
+								<VisibilityIcon />
+							  </IconButton>
+							</Link>
+						  )}
+						</TableCell>
 
 
                       </TableRow>

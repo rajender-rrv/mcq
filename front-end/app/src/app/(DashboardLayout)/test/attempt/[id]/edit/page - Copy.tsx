@@ -10,12 +10,6 @@ import {
   Box,
   LinearProgress,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
 } from "@mui/material";
 
 type Option = {
@@ -32,7 +26,9 @@ type Question = {
 
 export default function MCQPage() {
   const params = useParams();
-  const attemptId = params.id;
+  const attemptId = params.id;/*Array.isArray(params.attemptId)
+    ? params.attemptId[0]
+    : params.attemptId;*/
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -40,19 +36,15 @@ export default function MCQPage() {
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Pagination
+  // ✅ PAGINATION
   const QUESTIONS_PER_PAGE = 2;
   const [page, setPage] = useState(0);
 
-  // Modal state
-  const [openConfirm, setOpenConfirm] = useState(false);
-  const [missingQuestions, setMissingQuestions] = useState<number[]>([]);
-
-  // Fetch questions
+  // ✅ Fetch Questions
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await fetch(`/matdash-nextjs/api/mcq?attempt_id=${attemptId}`);
+ const res = await fetch(`/matdash-nextjs/api/mcq?attempt_id=${attemptId}`);
         const data = await res.json();
         setQuestions(data);
       } catch (err) {
@@ -66,11 +58,15 @@ export default function MCQPage() {
   }, [attemptId]);
 
   const answeredCount = Object.keys(answers).length;
-  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
+  const progress =
+    questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
-  // Pagination logic
+  // ✅ Pagination logic
   const startIndex = page * QUESTIONS_PER_PAGE;
-  const currentQuestions = questions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
+  const currentQuestions = questions.slice(
+    startIndex,
+    startIndex + QUESTIONS_PER_PAGE
+  );
   const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
 
   const handleNext = () => {
@@ -94,20 +90,23 @@ export default function MCQPage() {
     }));
   };
 
-  // Submit API
+  // ✅ Submit API
   const handleSubmit = async () => {
+    if (answeredCount !== questions.length) return;
+
     try {
       setLoading(true);
 
       const payload = questions.map((q, index) => {
         const key = `${q.id}-${index}`;
+
         return {
           attempt_question_id: String(q.attempt_question_id),
-          selected_option_id: String(answers[key] || ""),
+          selected_option_id: String(answers[key]),
         };
       });
 
-      const res = await fetch("/matdash-nextjs/api/mcq", {
+     const res = await fetch("/matdash-nextjs/api/mcq", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,10 +118,12 @@ export default function MCQPage() {
       });
 
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.message);
 
       setScore(data.score || 0);
       setSubmitted(true);
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       alert(err.message);
@@ -189,7 +190,11 @@ export default function MCQPage() {
               mt: 3,
             }}
           >
-            <Button variant="outlined" onClick={handlePrev} disabled={page === 0}>
+            <Button
+              variant="outlined"
+              onClick={handlePrev}
+              disabled={page === 0}
+            >
               Previous
             </Button>
 
@@ -200,16 +205,10 @@ export default function MCQPage() {
             {page === totalPages - 1 ? (
               <Button
                 variant="contained"
-                onClick={() => {
-                  const missing: number[] = [];
-                  questions.forEach((q, index) => {
-                    const key = `${q.id}-${index}`;
-                    if (!answers[key]) missing.push(index + 1);
-                  });
-                  setMissingQuestions(missing);
-                  setOpenConfirm(true);
-                }}
-                disabled={loading}
+                onClick={handleSubmit}
+                disabled={
+                  answeredCount !== questions.length || loading
+                }
               >
                 {loading ? "Submitting..." : "Submit Test"}
               </Button>
@@ -240,56 +239,6 @@ export default function MCQPage() {
           </Button>
         </Box>
       )}
-
-      {/* Confirmation Modal */}
-      <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
-        <DialogTitle>Confirm Submission</DialogTitle>
-        <DialogContent>
-          {missingQuestions.length > 0 ? (
-            <>
-              <Typography color="error">
-                You have not answered the following questions:
-              </Typography>
-              <List>
-                {missingQuestions.map((q) => (
-                  <ListItem key={q}>Question {q}</ListItem>
-                ))}
-              </List>
-              <Typography mt={2}>Are you sure you want to submit?</Typography>
-            </>
-          ) : (
-            <Typography>All questions answered. Are you sure want to Submit test?</Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setOpenConfirm(false);
-              if (missingQuestions.length > 0) {
-                const firstMissingIndex = missingQuestions[0] - 1;
-                const pageToGo = Math.floor(firstMissingIndex / QUESTIONS_PER_PAGE);
-                setPage(pageToGo);
-                setTimeout(() => {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }, 100);
-              }
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              setOpenConfirm(false);
-              handleSubmit();
-            }}
-          >
-            Yes, Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 }

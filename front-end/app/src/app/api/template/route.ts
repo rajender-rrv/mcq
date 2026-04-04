@@ -5,9 +5,13 @@ const SECRET = process.env.SECRET_KEY;
 
 export async function POST(req: Request) {
   try {
-    const cookieStore =  await cookies();
+    // ================= COOKIES =================
+    const cookieStore = await cookies();
     const access_token = cookieStore.get("access_token")?.value;
 
+    console.log("🔑 TOKEN:", access_token);
+
+    // ================= BODY =================
     const {
       name,
       duration,
@@ -17,10 +21,10 @@ export async function POST(req: Request) {
       category_id,
       shuffle_questions,
       shuffle_options,
-      negative_marking
+      negative_marking,
     } = await req.json();
 
-    // ✅ VALIDATION
+    // ================= VALIDATION =================
     if (
       !name ||
       !duration ||
@@ -30,67 +34,97 @@ export async function POST(req: Request) {
       !category_id
     ) {
       return NextResponse.json(
-        { message: "All fields are required" },
+        { message: "All fields are required ❌" },
         { status: 400 }
       );
     }
 
-    if (duration <= 0 || total_questions <= 0) {
+    if (Number(duration) <= 0 || Number(total_questions) <= 0) {
       return NextResponse.json(
-        { message: "Values must be greater than 0" },
+        { message: "Values must be greater than 0 ❌" },
         { status: 400 }
       );
     }
 
-    console.log("Template API HIT before ✅");
+    console.log("✅ Template API HIT BEFORE");
 
-    // ✅ Correct payload (NO ARRAY, NO i)
+    // ================= PAYLOAD =================
     const api_json_data = {
-      name: name,
-      subject_id: subject_id,
-      category_id: category_id,
-      total_questions: total_questions,
-      duration: duration,
+      name,
+      class_id: Number(class_id), // ✅ IMPORTANT FIX
+      subject_id: Number(subject_id),
+      category_id: Number(category_id),
+      total_questions: Number(total_questions),
+      duration: Number(duration),
       rules: {
         shuffle_questions: shuffle_questions ?? true,
         shuffle_options: shuffle_options ?? true,
-        negative_marking: negative_marking ?? false
-      }
+        negative_marking: negative_marking ?? false,
+      },
     };
 
-    console.log("Payload:", api_json_data);
+    console.log(
+      "📦 FINAL PAYLOAD:",
+      JSON.stringify(api_json_data, null, 2)
+    );
 
-    // ✅ Backend API Call
-     const backendUrl = process.env.API_BASE_URL;
-    const backendRes = await fetch(`${backendUrl}/templates/`, {
+    // ================= BACKEND CALL =================
+    const backendUrl = process.env.API_BASE_URL;
+    const url = `${backendUrl}/templates/`;
+
+    console.log("🌐 URL:", url);
+
+    const backendRes = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`
+        Authorization: `Bearer ${access_token}`,
       },
-      body: JSON.stringify(api_json_data)
+      body: JSON.stringify(api_json_data),
     });
 
-    const data = await backendRes.json();
+    console.log("📡 STATUS:", backendRes.status);
 
-    console.log("Template API HIT after ✅");
+    // ================= SAFE RESPONSE PARSE =================
+    const text = await backendRes.text();
+    console.log("📩 RAW RESPONSE:", text);
 
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+
+    console.log("✅ Template API HIT AFTER");
+
+    // ================= HANDLE ERROR =================
     if (!backendRes.ok) {
       return NextResponse.json(
-        { message: data.message || "Backend error" },
-        { status: 500 }
+        {
+          message:
+            data?.message ||
+            data?.detail ||
+            "Backend error ❌",
+          full_error: data, // 🔥 VERY IMPORTANT FOR DEBUG
+        },
+        { status: backendRes.status }
       );
     }
 
+    // ================= SUCCESS =================
     return NextResponse.json({
-      message: "Saved successfully",
-      data
+      message: "Saved successfully ✅",
+      data,
     });
 
   } catch (error: any) {
-    console.error(error);
+    console.error("❌ SERVER ERROR:", error);
+
     return NextResponse.json(
-      { message: error.message },
+      {
+        message: error.message || "Internal Server Error ❌",
+      },
       { status: 500 }
     );
   }
@@ -108,8 +142,10 @@ export async function GET() {
         { status: 401 }
       );
     }
-
-    const backendRes = await fetch("http://127.0.0.1:8000/templates/", {
+ const backendUrl = process.env.API_BASE_URL;
+    const url = `${backendUrl}/templates/`;
+	
+    const backendRes = await fetch(url, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${access_token}`
@@ -117,6 +153,7 @@ export async function GET() {
     });
 
     const data = await backendRes.json();
+	
 
     // ✅ Handle backend error
     if (!backendRes.ok) {

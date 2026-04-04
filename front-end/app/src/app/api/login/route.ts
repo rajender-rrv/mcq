@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 	 console.log("USER DEATILS API HIT before ✅");
 	 var access_token = data.access_token;
 	 
-	 const backendRes2 = await fetch(`http://127.0.0.1:8000/users/8`, {
+	 const backendRes2 = await fetch(`http://127.0.0.1:8000/users/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

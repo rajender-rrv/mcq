@@ -30,12 +30,26 @@ const UserProfile = () => {
         },
     ];
 
+
+  const getCookie = (name: string) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+};
+
+
+const user_id = getCookie("id");
+const username = getCookie("username");
+const email = getCookie("email");
+const role = getCookie("role");
+
     const [personal, setPersonal] = useState({
-        firstName: "Mathew",
-        lastName: "Anderson",
-        email: "mathew.anderson@gmail.com",
+        firstName: username,
+        lastName: username,
+        email:    decodeURIComponent(email),
         phone: "(347) 528-1947",
-        position: "Team Leader",
+		user_id: user_id,
+        position: role,
         facebook: "#!",
         twitter: "#!",
         github: "#!",
@@ -115,6 +129,7 @@ const UserProfile = () => {
                             <div><p className="text-xs text-gray-500">Last Name</p><p>{personal.lastName}</p></div>
                             <div><p className="text-xs text-gray-500">Email</p><p>{personal.email}</p></div>
                             <div><p className="text-xs text-gray-500">Phone</p><p>{personal.phone}</p></div>
+							 <div><p className="text-xs text-gray-500">User ID</p><p>{personal.user_id}</p></div>
                             <div><p className="text-xs text-gray-500">Position</p><p>{personal.position}</p></div>
                         </div>
                         <div className="flex justify-end">

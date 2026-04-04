@@ -1,3 +1,4 @@
+ "use client";
 import { uniqueId } from 'lodash'
 
 export interface ChildItem {
@@ -31,15 +32,17 @@ export interface MenuItem {
   isPro?: boolean
 }
 
-  const getCookie = (name: string) => {
+
+const getCookie = (name: string) => {
+  if (typeof document === "undefined") return null;
+
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
 };
 
 const user_id = getCookie("id");
-console.log("sidebar-user_id:::"+user_id);
-
+//alert("user_id:::"+user_id);
 
 const SidebarContent: MenuItem[] = [
   {
