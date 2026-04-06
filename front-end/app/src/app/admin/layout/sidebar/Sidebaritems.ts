@@ -52,8 +52,119 @@ const SidebarContent: MenuItem[] = [
         name: "Dashboard",
         icon: "solar:widget-add-line-duotone",
         id: uniqueId(),
-        url: "/",
+        url: "/admin",
         isPro: false
+      },
+	  {
+        name: 'Questions',
+        id: uniqueId(),
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Add Questions",
+            id: uniqueId(),
+            url:"/admin/QuestionsList/new",
+            isPro: false
+          },
+          {
+            name: "Questions List",
+            id: uniqueId(),
+            url:"/admin/QuestionsList",
+            isPro: false
+          },
+          {
+            name: "Questions Bulk Upload",
+            id: uniqueId(),
+            url:"/admin/questions-bulk-upload",
+            isPro: false
+          }
+        ],
+      },
+	  {
+        name: 'Templates',
+        id: uniqueId(),
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Add Template",
+            id: uniqueId(),
+            url:"/admin/template/new",
+            isPro: false
+          },
+          {
+            name: "Template List",
+            id: uniqueId(),
+            url:"/admin/template",
+            isPro: false
+          }
+        ],
+      },
+	  {
+        name: 'Users & Profiles',
+        id: uniqueId(),
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Users List",
+            id: uniqueId(),
+            url:"/admin/users",
+            isPro: false
+          }, 
+          {
+            name: "Add Profile",
+            id: uniqueId(),
+            url:"/admin/profile/new",
+            isPro: false
+          },
+          {
+            name: "Profile List",
+            id: uniqueId(),
+            url:"/admin/profile",
+            isPro: false
+          },
+          {
+            name: "Profile Bulk Upload",
+            id: uniqueId(),
+            url:"/admin/profile-bulk-upload",
+            isPro: false
+          },
+          {
+            name: "Users to Profile Mapping",
+            id: uniqueId(),
+            url:"/admin/user-profile/mapping",
+            isPro: false
+          }
+        ],
+      }, 
+	  {
+        name: 'Matser Details',
+        id: uniqueId(),
+        icon: 'solar:home-angle-linear',
+        url: '#',
+        children: [
+          {
+            name: "Class List",
+            id: uniqueId(),
+            url:"/admin/class",
+            isPro: false
+          },
+		  {
+            name: "Subject List",
+            id: uniqueId(),
+            url:"/admin/subject",
+            isPro: false
+          },
+		  {
+            name: "Category List",
+            id: uniqueId(),
+            url:"/admin/category",
+            isPro: false
+          }, 
+          
+        ],
       },
 	  {
         name: 'Tests',
@@ -64,13 +175,13 @@ const SidebarContent: MenuItem[] = [
           {
             name: "Test Dashboard",
             id: uniqueId(),
-            url:"/test",
+            url:"/admin/test",
             isPro: false
           },
 		  {
             name: "Test Attempts History",
             id: uniqueId(),
-            url: `/test/attempt_user/${user_id}/history`,
+            url: `/admin/test/attempt_user/${user_id}/history`,
             isPro: false
           }
           

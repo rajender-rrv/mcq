@@ -107,6 +107,7 @@ const Header = () => {
             <div className='flex w-full justify-end items-end'>
               <div className='flex gap-0 items-center '>
                
+
                 {/* ✅ Dark/Light Toggle */}
                 <div
                   className='hover:text-primary px-15 group focus:ring-0 rounded-full flex justify-center items-center cursor-pointer text-gray relative'
