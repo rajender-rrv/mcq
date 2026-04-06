@@ -35,7 +35,7 @@ export default function Profile() {
         <DropdownMenuTrigger asChild>
           <span className="h-10 w-10 hover:text-primary hover:bg-lightprimary rounded-full flex justify-center items-center cursor-pointer group-hover/menu:bg-lightprimary group-hover/menu:text-primary">
             <Image
-              src="/images/profile/user-1.jpg"
+              src="/images/profile/user-5.jpg"
               alt="Profile"
               height={35}
               width={35}

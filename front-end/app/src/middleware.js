@@ -25,23 +25,28 @@ export function middleware(req) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
+	console.log("middleware calling  "+role);
   // ✅ Admin trying user route → redirect to admin
   if (role === "admin" && !pathname.startsWith("/admin")) {
+	  
+	console.log("1.rendering to "+role);
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
   // ✅ User trying admin route → block
   if (role !== "admin" && pathname.startsWith("/admin")) {
+	  console.log("2.rendering to "+role);
     return NextResponse.redirect(new URL("/", req.url));
   }
-
+ console.log("1,2. checking completed...!!!");
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     "/admin/:path*",
-    "/users/:path*",
+    "/user-profile/:path*",
+	"/test/:path*",
     "/",
   ],
 };
