@@ -64,6 +64,15 @@ class Class(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
 
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), nullable=False
+    )
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
+    deleted_by: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    deleted_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
 
 # =========================
 # SUBJECTS
@@ -79,6 +88,15 @@ class Subject(Base):
         nullable=False
     )
 
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), nullable=False
+    )
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
+    deleted_by: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    deleted_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
 
 # =========================
 # CATEGORIES
@@ -89,12 +107,14 @@ class Category(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(20), nullable=False)
 
-    __table_args__ = (
-        CheckConstraint(
-            "name IN ('EASY', 'MEDIUM', 'HARD')",
-            name="ck_categories_name"
-        ),
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), nullable=False
     )
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
+    deleted_by: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    deleted_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
 # =========================
