@@ -25,7 +25,7 @@ export const Login = () => {
       setError("");
       setSuccess(false);
 
- const res = await fetch("/matdash-nextjs/api/login", {
+ const res = await fetch("/api/login", {
 	 method: "POST",
         headers: {
           "Content-Type": "application/json", // ✅ FIXED

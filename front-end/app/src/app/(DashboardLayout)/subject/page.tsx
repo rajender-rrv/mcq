@@ -97,7 +97,7 @@ export default function InvoicePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/matdash-nextjs/api/template");
+        const res = await fetch("/api/subjects");
         const result = await res.json();
 
         const users = Array.isArray(result?.results)

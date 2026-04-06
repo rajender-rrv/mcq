@@ -15,14 +15,14 @@ import { Icon } from "@iconify/react";
 export default function Profile() {
   const handleLogout = async () => {
     try {
-      const res =  await fetch("/matdash-nextjs/api/logout", {
+      const res =  await fetch("/api/logout", {
         method: "POST",
-		"Content-Type": "text/plain",
+		    "Content-Type": "text/plain",
       });
 		
       const data = await res.json();
 	  if(data.status == 204){
-		window.location.href = "/matdash-nextjs/auth/login";
+		window.location.href = "/auth/login";
 	  }
 	} catch (error) {
       console.error("Logout failed:", error);
@@ -35,7 +35,7 @@ export default function Profile() {
         <DropdownMenuTrigger asChild>
           <span className="h-10 w-10 hover:text-primary hover:bg-lightprimary rounded-full flex justify-center items-center cursor-pointer group-hover/menu:bg-lightprimary group-hover/menu:text-primary">
             <Image
-              src="/matdash-nextjs/images/profile/user-1.jpg"
+              src="/images/profile/user-1.jpg"
               alt="Profile"
               height={35}
               width={35}

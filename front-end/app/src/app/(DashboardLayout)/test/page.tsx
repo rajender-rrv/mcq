@@ -37,7 +37,7 @@ const Page = () => {
   useEffect(() => {
     const fetchWidgets = async () => {
       try {
-        const res = await fetch("/matdash-nextjs/api/test"); // ✅ correct path
+        const res = await fetch("/api/test"); // ✅ correct path
         const data = await res.json();
 
         const formatted = data.map((item: any) => ({
@@ -71,7 +71,7 @@ const Page = () => {
 
       console.log("📤 Sending:", payload);
 
-      const res = await fetch("/matdash-nextjs/api/test", {
+      const res = await fetch("/api/test", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

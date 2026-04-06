@@ -108,7 +108,7 @@ export default function SimpleFormPage() {
     try {
       setLoading(true);
 
-      const res = await fetch("/matdash-nextjs/api/template", {
+      const res = await fetch("/api/template", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

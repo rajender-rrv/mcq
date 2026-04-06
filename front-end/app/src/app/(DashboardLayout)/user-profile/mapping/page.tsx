@@ -40,7 +40,7 @@ export default function UserProfilesMatdash() {
   }, []);
 
   const fetchUsers = async () => {
-    const res = await fetch("/matdash-nextjs/api/users");
+    const res = await fetch("/api/users");
     const data = await res.json();
 
     // 🛡️ ensure profiles exists
@@ -53,7 +53,7 @@ export default function UserProfilesMatdash() {
   };
 
   const fetchProfiles = async () => {
-    const res = await fetch("/matdash-nextjs/api/profiles");
+    const res = await fetch("/api/profiles");
     const data = await res.json();
     setProfilesMaster(data || []);
   };
@@ -97,7 +97,7 @@ export default function UserProfilesMatdash() {
   const addProfile = async () => {
     if (!selectedProfileId || !selectedUserId) return;
 
-    const res = await fetch("/matdash-nextjs/api/user-profile", {
+    const res = await fetch("/api/user-profile", {
       method: "POST",
       body: JSON.stringify({
         userId: selectedUserId,
@@ -128,7 +128,7 @@ export default function UserProfilesMatdash() {
 
   // ❌ Remove profile
   const deleteProfile = async (profileId: number) => {
-    await fetch("/matdash-nextjs/api/user-profile", {
+    await fetch("/api/user-profile", {
       method: "DELETE",
       body: JSON.stringify({
         userId: selectedUserId,

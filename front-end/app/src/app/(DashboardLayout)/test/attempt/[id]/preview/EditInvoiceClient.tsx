@@ -46,7 +46,7 @@ export default function PreviewPage() {
     const fetchPreview = async () => {
       try {
         const res = await fetch(
-          `/matdash-nextjs/api/mcqview?attempt_id=${attemptId}`
+          `/api/mcqview?attempt_id=${attemptId}`
         );
         const data = await res.json();
         setQuestions(data);

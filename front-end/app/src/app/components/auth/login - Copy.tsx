@@ -17,7 +17,7 @@ export const Login = () => {
   const router = useRouter();
 
   const handleLogin = async () => {
-    const res = await fetch("/matdash-nextjs/api/login", {
+    const res = await fetch("/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

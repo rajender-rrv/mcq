@@ -79,7 +79,7 @@ export default function InvoicePage() {
       try {
         setLoading(true);
 
-        const res = await fetch("/matdash-nextjs/api/questions");
+        const res = await fetch("/api/questions");
 
         if (!res.ok) {
           throw new Error("Failed to fetch");

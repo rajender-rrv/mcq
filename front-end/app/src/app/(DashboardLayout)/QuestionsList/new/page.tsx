@@ -152,7 +152,7 @@ export default function MultiQuestionPage() {
     try {
       setLoading(true);
 
-      const res = await fetch("/matdash-nextjs/api/questions", {
+      const res = await fetch("/api/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

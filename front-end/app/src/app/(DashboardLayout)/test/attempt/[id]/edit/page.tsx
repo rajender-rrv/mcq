@@ -52,7 +52,7 @@ export default function MCQPage() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await fetch(`/matdash-nextjs/api/mcq?attempt_id=${attemptId}`);
+        const res = await fetch(`/api/mcq?attempt_id=${attemptId}`);
         const data = await res.json();
         setQuestions(data);
       } catch (err) {
@@ -107,7 +107,7 @@ export default function MCQPage() {
         };
       });
 
-      const res = await fetch("/matdash-nextjs/api/mcq", {
+      const res = await fetch("/api/mcq", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
