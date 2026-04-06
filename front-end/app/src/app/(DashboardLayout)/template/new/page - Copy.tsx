@@ -11,10 +11,9 @@ import {
   FormControlLabel,
   Radio,
   FormLabel,
-  CircularProgress,
 } from "@mui/material";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function SimpleFormPage() {
   const [form, setForm] = useState({
@@ -29,51 +28,16 @@ export default function SimpleFormPage() {
     negative_marking: "false",
   });
 
-  const [classes, setClasses] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [dropdownLoading, setDropdownLoading] = useState(true);
-
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ================= FETCH DROPDOWNS =================
-  useEffect(() => {
-    const fetchDropdowns = async () => {
-      try {
-        const [classRes, subjectRes, categoryRes] = await Promise.all([
-          fetch("/api/class"),
-          fetch("/api/subjects"),
-          fetch("/api/category"),
-        ]);
-
-        const classData = await classRes.json();
-        const subjectData = await subjectRes.json();
-        const categoryData = await categoryRes.json();
-
-        // ✅ Your API returns array directly
-        setClasses((classData || []).filter((c: any) => !c.is_deleted));
-        setSubjects((subjectData || []).filter((s: any) => !s.is_deleted));
-        setCategories((categoryData || []).filter((c: any) => !c.is_deleted));
-      } catch (error) {
-        console.error("Dropdown fetch error:", error);
-      } finally {
-        setDropdownLoading(false);
-      }
-    };
-
-    fetchDropdowns();
-  }, []);
-
   // ================= HANDLE CHANGE =================
   const handleChange = (field: string, value: string) => {
-    if (
-      (field === "duration" || field === "total_questions") &&
-      Number(value) < 1
-    ) {
+    // ✅ Force duration & total_questions >= 1
+    if ((field === "duration" || field === "total_questions") && Number(value) < 1) {
       value = "1";
     }
 
@@ -81,14 +45,6 @@ export default function SimpleFormPage() {
       ...prev,
       [field]: value,
     }));
-
-    // optional: reset subject when class changes
-    if (field === "class_id") {
-      setForm((prev) => ({
-        ...prev,
-        subject_id: "",
-      }));
-    }
   };
 
   // ================= VALIDATION =================
@@ -143,7 +99,9 @@ export default function SimpleFormPage() {
 
       const res = await fetch("/api/template", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
@@ -153,8 +111,10 @@ export default function SimpleFormPage() {
         throw new Error(data.message || "Something went wrong");
       }
 
+      // ✅ SUCCESS
       setSuccessMsg("Template added successfully ✅");
 
+      // ✅ RESET FORM
       setForm({
         name: "",
         duration: "",
@@ -168,8 +128,11 @@ export default function SimpleFormPage() {
       });
 
       window.scrollTo({ top: 0, behavior: "smooth" });
+
     } catch (error: any) {
+      // ❌ ERROR
       setErrorMsg(error.message || "Failed ❌");
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
@@ -184,21 +147,21 @@ export default function SimpleFormPage() {
           Add Template
         </Typography>
 
-        {/* SUCCESS */}
+        {/* ✅ SUCCESS */}
         {successMsg && (
-          <div className="p-4 mb-4 bg-green-100 text-green-800 border rounded">
-            {successMsg}
+          <div className="flex flex-col gap-2 p-4 text-sm bg-lightsuccess text-success border border-success rounded-md mb-4">
+            <span className="font-medium">Success:{successMsg} </span>
           </div>
         )}
 
-        {/* ERROR */}
+        {/* ❌ ERROR */}
         {errorMsg && (
-          <div className="p-4 mb-4 bg-red-100 text-red-800 border rounded">
-            {errorMsg}
+          <div className="flex flex-col gap-2 p-4 text-sm bg-lighterror text-error border border-error rounded-md mb-4">
+            <span className="font-medium">Error:{errorMsg} </span>
           </div>
         )}
 
-        {/* NAME */}
+        {/* FORM FIELDS */}
         <TextField
           label="Name"
           fullWidth
@@ -209,7 +172,6 @@ export default function SimpleFormPage() {
           onChange={(e) => handleChange("name", e.target.value)}
         />
 
-        {/* DURATION */}
         <TextField
           label="Duration"
           type="number"
@@ -222,7 +184,6 @@ export default function SimpleFormPage() {
           inputProps={{ min: 1 }}
         />
 
-        {/* TOTAL QUESTIONS */}
         <TextField
           label="Total Questions"
           type="number"
@@ -235,7 +196,6 @@ export default function SimpleFormPage() {
           inputProps={{ min: 1 }}
         />
 
-        {/* CLASS */}
         <TextField
           select
           label="Class"
@@ -243,24 +203,11 @@ export default function SimpleFormPage() {
           margin="normal"
           value={form.class_id}
           onChange={(e) => handleChange("class_id", e.target.value)}
-          disabled={dropdownLoading}
-          error={!!errors.class_id}
-          helperText={errors.class_id}
         >
-          {dropdownLoading ? (
-            <MenuItem value="">
-              <CircularProgress size={20} />
-            </MenuItem>
-          ) : (
-            classes.map((cls) => (
-              <MenuItem key={cls.id} value={cls.id}>
-                {cls.name}
-              </MenuItem>
-            ))
-          )}
+          <MenuItem value="1">Grade 6</MenuItem>
+          <MenuItem value="2">Grade 7</MenuItem>
         </TextField>
 
-        {/* SUBJECT */}
         <TextField
           select
           label="Subject"
@@ -268,18 +215,11 @@ export default function SimpleFormPage() {
           margin="normal"
           value={form.subject_id}
           onChange={(e) => handleChange("subject_id", e.target.value)}
-          disabled={dropdownLoading}
-          error={!!errors.subject_id}
-          helperText={errors.subject_id}
         >
-          {subjects.map((sub) => (
-            <MenuItem key={sub.id} value={sub.id}>
-              {sub.name}
-            </MenuItem>
-          ))}
+          <MenuItem value="1">Maths</MenuItem>
+          <MenuItem value="2">Science</MenuItem>
         </TextField>
 
-        {/* CATEGORY */}
         <TextField
           select
           label="Category"
@@ -287,43 +227,49 @@ export default function SimpleFormPage() {
           margin="normal"
           value={form.category_id}
           onChange={(e) => handleChange("category_id", e.target.value)}
-          disabled={dropdownLoading}
-          error={!!errors.category_id}
-          helperText={errors.category_id}
         >
-          {categories.map((cat) => (
-            <MenuItem key={cat.id} value={cat.id}>
-              {cat.name}
-            </MenuItem>
-          ))}
+          <MenuItem value="1">Easy</MenuItem>
+          <MenuItem value="2">Medium</MenuItem>
         </TextField>
 
-        {/* RADIO OPTIONS */}
-        {["shuffle_questions", "shuffle_options", "negative_marking"].map(
-          (field) => (
-            <Box mt={2} key={field}>
-              <FormLabel>
-                {field.replace("_", " ").toUpperCase()}
-              </FormLabel>
-              <RadioGroup
-                row
-                value={(form as any)[field]}
-                onChange={(e) => handleChange(field, e.target.value)}
-              >
-                <FormControlLabel
-                  value="true"
-                  control={<Radio />}
-                  label="Yes"
-                />
-                <FormControlLabel
-                  value="false"
-                  control={<Radio />}
-                  label="No"
-                />
-              </RadioGroup>
-            </Box>
-          )
-        )}
+        {/* ✅ Shuffle Questions */}
+        <Box mt={2}>
+          <FormLabel>Shuffle Questions</FormLabel>
+          <RadioGroup
+            row
+            value={form.shuffle_questions}
+            onChange={(e) => handleChange("shuffle_questions", e.target.value)}
+          >
+            <FormControlLabel value="true" control={<Radio />} label="Yes" />
+            <FormControlLabel value="false" control={<Radio />} label="No" />
+          </RadioGroup>
+        </Box>
+
+        {/* ✅ Shuffle Options */}
+        <Box mt={2}>
+          <FormLabel>Shuffle Options</FormLabel>
+          <RadioGroup
+            row
+            value={form.shuffle_options}
+            onChange={(e) => handleChange("shuffle_options", e.target.value)}
+          >
+            <FormControlLabel value="true" control={<Radio />} label="Yes" />
+            <FormControlLabel value="false" control={<Radio />} label="No" />
+          </RadioGroup>
+        </Box>
+
+        {/* ✅ Negative Marking */}
+        <Box mt={2}>
+          <FormLabel>Negative Marking</FormLabel>
+          <RadioGroup
+            row
+            value={form.negative_marking}
+            onChange={(e) => handleChange("negative_marking", e.target.value)}
+          >
+            <FormControlLabel value="true" control={<Radio />} label="Yes" />
+            <FormControlLabel value="false" control={<Radio />} label="No" />
+          </RadioGroup>
+        </Box>
 
         <Box mt={3}>
           <Button variant="contained" onClick={handleSubmit} disabled={loading}>

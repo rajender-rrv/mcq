@@ -8,6 +8,7 @@ import {
   Paper,
   IconButton,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -34,6 +35,12 @@ export default function MultiQuestionPage() {
     category_id: "",
   });
 
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const [dropdownLoading, setDropdownLoading] = useState(true);
+
   const [questions, setQuestions] = useState<Question[]>([
     { question_text: "", options: [...DEFAULT_OPTIONS], correctAnswer: null },
   ]);
@@ -46,6 +53,34 @@ export default function MultiQuestionPage() {
     show: false,
   });
 
+  // ================= FETCH DROPDOWNS =================
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [classRes, subjectRes, categoryRes] = await Promise.all([
+          fetch("/api/class"),
+          fetch("/api/subjects"),
+          fetch("/api/category"),
+        ]);
+
+        const classData = await classRes.json();
+        const subjectData = await subjectRes.json();
+        const categoryData = await categoryRes.json();
+
+        // ✅ FIX: direct array + filter deleted
+        setClasses((classData || []).filter((c: any) => !c.is_deleted));
+        setSubjects((subjectData || []).filter((s: any) => !s.is_deleted));
+        setCategories((categoryData || []).filter((c: any) => !c.is_deleted));
+      } catch (error) {
+        console.error("Dropdown fetch error:", error);
+      } finally {
+        setDropdownLoading(false);
+      }
+    };
+
+    fetchDropdowns();
+  }, []);
+
   // ✅ AUTO SCROLL
   useEffect(() => {
     if (alert.show) {
@@ -56,6 +91,11 @@ export default function MultiQuestionPage() {
   // ================= HANDLERS =================
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+
+    // OPTIONAL: reset subject when class changes
+    if (field === "class_id") {
+      setForm((prev) => ({ ...prev, subject_id: "" }));
+    }
   };
 
   const handleQuestionChange = (qIndex: number, value: string) => {
@@ -190,9 +230,6 @@ export default function MultiQuestionPage() {
           correctAnswer: null,
         },
       ]);
-
-     // setTimeout(() => router.push("/QuestionsList"), 3000);
-
     } catch (err: any) {
       setAlert({
         type: "error",
@@ -201,7 +238,6 @@ export default function MultiQuestionPage() {
       });
     } finally {
       setLoading(false);
-      //setTimeout(() => setAlert({ type: "", message: "", show: false }), 3000);
     }
   };
 
@@ -233,9 +269,19 @@ export default function MultiQuestionPage() {
           margin="normal"
           value={form.class_id}
           onChange={(e) => handleChange("class_id", e.target.value)}
+          disabled={dropdownLoading}
         >
-          <MenuItem value="1">Grade 6</MenuItem>
-          <MenuItem value="2">Grade 7</MenuItem>
+          {dropdownLoading ? (
+            <MenuItem value="">
+              <CircularProgress size={20} />
+            </MenuItem>
+          ) : (
+            classes.map((cls) => (
+              <MenuItem key={cls.id} value={cls.id}>
+                {cls.name}
+              </MenuItem>
+            ))
+          )}
         </TextField>
 
         {/* SUBJECT */}
@@ -246,9 +292,13 @@ export default function MultiQuestionPage() {
           margin="normal"
           value={form.subject_id}
           onChange={(e) => handleChange("subject_id", e.target.value)}
+          disabled={dropdownLoading}
         >
-          <MenuItem value="1">Maths</MenuItem>
-          <MenuItem value="2">Science</MenuItem>
+          {subjects.map((sub) => (
+            <MenuItem key={sub.id} value={sub.id}>
+              {sub.name}
+            </MenuItem>
+          ))}
         </TextField>
 
         {/* CATEGORY */}
@@ -259,9 +309,13 @@ export default function MultiQuestionPage() {
           margin="normal"
           value={form.category_id}
           onChange={(e) => handleChange("category_id", e.target.value)}
+          disabled={dropdownLoading}
         >
-          <MenuItem value="1">Easy</MenuItem>
-          <MenuItem value="2">Medium</MenuItem>
+          {categories.map((cat) => (
+            <MenuItem key={cat.id} value={cat.id}>
+              {cat.name}
+            </MenuItem>
+          ))}
         </TextField>
 
         {/* QUESTIONS */}
@@ -283,7 +337,6 @@ export default function MultiQuestionPage() {
               }
             />
 
-            {/* OPTIONS */}
             {q.options.map((opt, oIndex) => (
               <Box key={oIndex} display="flex" gap={1} mt={1}>
                 <TextField
@@ -304,7 +357,6 @@ export default function MultiQuestionPage() {
               Add Option
             </Button>
 
-            {/* CORRECT ANSWER */}
             <TextField
               select
               fullWidth
